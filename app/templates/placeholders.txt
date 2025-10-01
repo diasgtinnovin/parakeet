@@ -1,0 +1,155 @@
+# Placeholder values for email templates
+# Format: [PLACEHOLDER_TYPE]:[VALUE]
+
+# Greetings - more human variations
+greeting:Hey there!
+greeting:Hi!
+greeting:Hello!
+greeting:Hey!
+greeting:Hi there!
+greeting:Good morning!
+greeting:Good afternoon!
+greeting:Hope you're well!
+greeting:What's up!
+greeting:Howdy!
+greeting:Hey friend!
+greeting:Greetings!
+greeting:Salutations!
+greeting:Yo!
+
+# Casual phrases - more natural variations
+casual_phrase:Hope all is well.
+casual_phrase:How have you been?
+casual_phrase:Hope things are good on your end.
+casual_phrase:Trust you're doing well.
+casual_phrase:Hope you're having a great day.
+casual_phrase:Just wanted to reach out.
+casual_phrase:Thought I'd drop you a line.
+casual_phrase:Hope you're keeping well.
+casual_phrase:Been thinking about you lately.
+casual_phrase:Hope life's treating you kindly.
+casual_phrase:Wondering how you've been.
+casual_phrase:Just wanted to see how you're doing.
+casual_phrase:Hope your world is good.
+casual_phrase:Figured I'd check in.
+casual_phrase:Seems like forever since we connected.
+casual_phrase:Hope everything's smooth sailing.
+casual_phrase:Trust all is going well in your corner.
+casual_phrase:Hope you're crushing it.
+casual_phrase:Just dropping by to say hi.
+
+# Closings - more human variations
+closing:Take care!
+closing:Talk soon!
+closing:Best wishes!
+closing:Have a great day!
+closing:Catch you later!
+closing:All the best!
+closing:Hope to hear from you soon!
+closing:Take it easy!
+closing:Have a good one!
+closing:Cheers!
+closing:Until next time!
+closing:Stay awesome!
+closing:Keep in touch!
+closing:Peace out!
+closing:Later!
+closing:Be well!
+closing:Sending good vibes!
+closing:Hope your day rocks!
+closing:Stay golden!
+closing:Keep smiling!
+closing:Wishing you well!
+closing:Much love!
+closing:Stay safe!
+
+# Time references - more natural timing
+time_reference:Hope your week is going well.
+time_reference:Hope your Monday is treating you well.
+time_reference:Hope you're having a productive week.
+time_reference:Hope your day is going smoothly.
+time_reference:Hope you had a good weekend.
+time_reference:Hope your morning is off to a good start.
+time_reference:Hope your Tuesday isn't dragging.
+time_reference:TGIF, am I right?
+time_reference:Hope you survived Monday.
+time_reference:Midweek check-in!
+time_reference:Almost the weekend!
+time_reference:Hope you're wrapping up the week well.
+time_reference:Monday blues got you down?
+time_reference:Hope you're having a chill evening.
+time_reference:Early bird or night owl today?
+
+# Weather comments - more conversational
+weather_comment:Hope the weather's nice where you are.
+weather_comment:It's a beautiful day here.
+weather_comment:Hope you're staying warm.
+weather_comment:Beautiful weather we've been having.
+weather_comment:Hope you're enjoying the sunshine.
+weather_comment:Is it as crazy hot there as it is here?
+weather_comment:Hope you're staying cool in this heat.
+weather_comment:Perfect weather for a coffee, right?
+weather_comment:Finally some nice weather!
+weather_comment:Hope the rain isn't getting you down.
+weather_comment:Love these crisp fall days.
+weather_comment:Winter's coming fast, huh?
+weather_comment:Spring fever hitting you too?
+
+# Time of day - more specific
+time_of_day:morning
+time_of_day:afternoon
+time_of_day:day
+time_of_day:week
+time_of_day:evening
+time_of_day:weekend
+time_of_day:Thursday
+time_of_day:Friday
+
+# New placeholder types for more human content
+conversation_starter:So what's new with you?
+conversation_starter:How's work treating you?
+conversation_starter:Any exciting plans lately?
+conversation_starter:What have you been up to?
+conversation_starter:How's life in your neck of the woods?
+conversation_starter:Been keeping busy?
+conversation_starter:Any fun adventures recently?
+conversation_starter:How's the family doing?
+
+# Filler words that make emails sound more natural
+filler_phrase:anyway,
+filler_phrase:by the way,
+filler_phrase:oh,
+filler_phrase:you know,
+filler_phrase:honestly,
+filler_phrase:actually,
+filler_phrase:so,
+filler_phrase:well,
+filler_phrase:I mean,
+filler_phrase:basically,
+
+# Human imperfections/typos that are intentional (use sparingly)
+human_quirk:Hope your doing well
+human_quirk:Its been a while
+human_quirk:Your the best
+human_quirk:alot
+human_quirk:definately
+human_quirk:recieve
+
+# Emotional expressions
+emotional_touch:😊
+emotional_touch:🙂
+emotional_touch:😄
+emotional_touch::)
+emotional_touch::-)
+emotional_touch:lol
+emotional_touch:haha
+emotional_touch:😉
+
+# Regional/cultural variations
+regional_phrase:How are you doing?
+regional_phrase:How you been?
+regional_phrase:What's good?
+regional_phrase:How's tricks?
+regional_phrase:How are things?
+regional_phrase:What's happening?
+regional_phrase:How's everything? 

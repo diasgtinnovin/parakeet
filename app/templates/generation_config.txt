@@ -1,0 +1,30 @@
+# Email Generation Configuration
+# Format: [SETTING]:[VALUE]
+
+# Generation method ratios (must sum to 1.0) - optimized for human-like content
+pure_template_ratio:0.25
+template_ai_fill_ratio:0.45
+ai_addon_ratio:0.25
+ai_seeded_ratio:0.05
+
+# Content validation settings
+max_word_repetition_ratio:0.30
+enable_spam_filtering:true
+enable_profanity_check:false
+
+# AI generation settings - optimized for human-like content
+ai_temperature:0.9
+max_content_tokens:120
+max_subject_tokens:25
+
+# Human-like content settings
+enable_contractions:true
+enable_filler_words:true
+enable_emotional_touches:true
+enable_timing_context:true
+enable_intentional_imperfections:true
+imperfection_rate:0.05
+contraction_rate:0.6
+filler_word_rate:0.15
+emotional_touch_rate:0.1
+timing_context_rate:0.3 

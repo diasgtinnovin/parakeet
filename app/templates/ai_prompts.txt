@@ -1,0 +1,17 @@
+# AI Prompts for different generation modes
+# Format: [PROMPT_TYPE]|[PROMPT_CONTENT]
+
+# For filling template placeholders
+fill_placeholder|Generate a natural, casual {placeholder_type} for an email. Keep it friendly and conversational. Examples: {examples}. Make it sound like a real person wrote it - include slight imperfections, contractions, or informal language. Generate only the phrase, no quotes or extra text.
+
+# For generating add-on sentences
+addon_sentence|Generate 1-2 casual sentences to add to this email: "{base_content}". Make it sound like a real human wrote it - use contractions, filler words (like "anyway", "by the way"), and natural flow. Don't repeat what's already said. Keep it brief, friendly, and slightly imperfect like real conversation.
+
+# For AI-seeded full generation
+ai_seeded|Write a short, casual email (2-3 sentences) with this theme: {theme}. Requirements: Sound like a real person wrote it (use contractions like "I'm", "you're", "it's"), Include natural filler words or mild imperfections, Write like you're texting a friend, Include subtle regional expressions, Don't be too perfect or formal, End with a relaxed closing. Avoid business language completely.
+
+# For subject generation
+subject_generation|Generate a casual email subject line for this content: "{content}". Keep it short (3-6 words), friendly, and natural. Avoid exclamation marks and promotional language.
+
+# For content validation
+content_validation|Review this email content for spam-like patterns: "{content}". Check for: excessive punctuation, promotional language, urgency words, repetitive patterns. Return only "CLEAN" or "FLAGGED". 

@@ -1,0 +1,46 @@
+# Email Templates for Warmup Service
+# Format: [TEMPLATE_TYPE]|[SUBJECT_TEMPLATE]|[CONTENT_TEMPLATE]
+# Placeholders: {greeting}, {name}, {casual_phrase}, {closing}, {time_reference}, {weather_comment}
+
+# General greeting templates
+general|Hey there!|{greeting} {casual_phrase} Hope you're doing well! {closing}
+general|Just saying hi|{greeting} Just wanted to reach out and say hello. {time_reference} {closing}
+general|Hope you're well|{greeting} How have you been? Just checking in. {closing}
+general|Quick hello|{greeting} {casual_phrase} Hope everything's going great with you. {closing}
+general|Good {time_of_day}!|{greeting} {weather_comment} Hope you're having a good {time_of_day}. {closing}
+
+# Follow-up templates  
+follow_up|Following up|{greeting} Just wanted to follow up on our last conversation. {casual_phrase} {closing}
+follow_up|Checking in|{greeting} {time_reference} Just wanted to check in and see how things are going. {closing}
+follow_up|Quick follow-up|{greeting} Hope you're doing well! Just wanted to touch base. {closing}
+follow_up|How are things?|{greeting} {casual_phrase} Just following up - how are things on your end? {closing}
+
+# Thank you templates
+thank_you|Thanks!|{greeting} {casual_phrase} Really appreciate your time and consideration. {closing}
+thank_you|Much appreciated|{greeting} Thanks for taking the time to read this. {time_reference} {closing}
+thank_you|Thank you|{greeting} Thank you for your attention to this matter. {casual_phrase} {closing}
+thank_you|Grateful|{greeting} {time_reference} Grateful for your time and consideration. {closing}
+
+# Casual check-in templates
+casual|How's it going?|{greeting} How's everything going? {casual_phrase} {weather_comment} {closing}
+casual|Hope you're good|{greeting} {time_reference} Hope you're doing good! {casual_phrase} {closing}
+casual|Just thinking of you|{greeting} Was just thinking about you and wanted to say hi. {closing}
+casual|Long time no talk|{greeting} {casual_phrase} It's been a while - hope you're doing well! {closing}
+
+# More human-like conversational templates
+conversation|What's new?|{greeting} {conversation_starter} {filler_phrase} {casual_phrase} {closing}
+conversation|Random check-in|{greeting} {filler_phrase} just wanted to drop a quick line. {conversation_starter} {closing}
+conversation|Quick question|{greeting} Hope you don't mind me asking, but {conversation_starter} {casual_phrase} {closing}
+conversation|Been wondering|{greeting} {filler_phrase} I've been wondering how you've been. {casual_phrase} {closing}
+
+# Templates with emotional touches (use sparingly)
+friendly|Just saying hi|{greeting} {casual_phrase} {emotional_touch} {conversation_starter} {closing}
+friendly|Hope all's well|{greeting} {time_reference} {filler_phrase} {casual_phrase} {emotional_touch} {closing}
+
+# Templates with intentional imperfections (very rare)
+natural|Casual hello|{greeting} {human_quirk}! {casual_phrase} {filler_phrase} {conversation_starter} {closing}
+
+# Quick and short templates (more realistic)
+quick|Hey!|{greeting} {casual_phrase} {closing}
+quick|Quick hello|{greeting} {filler_phrase} just saying hi! {closing}
+quick|Thinking of you|{greeting} {casual_phrase} {emotional_touch} {closing} 
