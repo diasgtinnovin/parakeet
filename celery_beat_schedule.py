@@ -2,6 +2,12 @@
 """
 Celery Beat Schedule Configuration
 Run this to start the scheduled tasks
+
+NEW SCHEDULING SYSTEM:
+- Daily schedules generated at midnight for each timezone
+- Emails sent based on pre-calculated schedules (not reactive checking)
+- Peak/Normal/Low activity periods with proper distribution (60/30/10)
+- Weekend support (skipped)
 """
 
 from celery import Celery
@@ -17,11 +23,12 @@ celery = Celery('email_warmup_service')
 
 # Import tasks to register them
 from app.tasks.email_tasks import (
-    send_warmup_emails_task, 
-    check_replies_task, 
+    generate_daily_schedules_task,
+    send_scheduled_emails_task,
+    check_replies_task,
     advance_warmup_day_task,
     warmup_status_report_task,
-    generate_daily_schedule_task
+    cleanup_old_schedules_task
 )
 
 # Configure Celery
@@ -31,41 +38,47 @@ celery.conf.update(
     task_serializer='json',
     accept_content=['json'],
     result_serializer='json',
-    timezone='Asia/Kolkata',
+    timezone='UTC',  # Store times in UTC
     enable_utc=True,
-    include=['app.tasks.email_tasks'],  # Include the tasks module
+    include=['app.tasks.email_tasks'],
 )
 
-# Schedule tasks with ramping support
+# Schedule tasks with new architecture
 celery.conf.beat_schedule = {
-    # Check for warmup emails every 3 minutes (human timing logic decides when to actually send)
-    'send-warmup-emails': {
-        'task': 'app.tasks.email_tasks.send_warmup_emails_task',
-        'schedule': crontab(minute='*/3'),  # Every 3 minutes (more frequent checks)
+    # Generate daily schedules - runs every hour to catch midnight in different timezones
+    'generate-daily-schedules': {
+        'task': 'app.tasks.email_tasks.generate_daily_schedules_task',
+        'schedule': crontab(minute=1, hour='*/1'),  # Every hour at minute 1
     },
     
-    # Check for replies every minute
+    # Send scheduled emails - runs every 2 minutes
+    'send-scheduled-emails': {
+        'task': 'app.tasks.email_tasks.send_scheduled_emails_task',
+        'schedule': crontab(minute='*/2'),  # Every 2 minutes
+    },
+    
+    # Check for replies
     'check-replies': {
         'task': 'app.tasks.email_tasks.check_replies_task',
-        'schedule': crontab(minute='*/5'),  # Every minute
+        'schedule': crontab(minute='*/5'),  # Every 5 minutes
     },
     
-    # Advance warmup day once daily at 00:01 (1 minute past midnight)
+    # Advance warmup day once daily
     'advance-warmup-day': {
         'task': 'app.tasks.email_tasks.advance_warmup_day_task',
-        'schedule': crontab(hour=0, minute=1),  # Daily at 00:01
+        'schedule': crontab(hour=0, minute=5),  # At 00:05 daily
     },
     
-    # Generate status report every 6 hours
+    # Generate status report
     'warmup-status-report': {
         'task': 'app.tasks.email_tasks.warmup_status_report_task',
         'schedule': crontab(minute=0, hour='*/6'),  # Every 6 hours
     },
     
-    # Generate daily schedule at 8:30 AM each day
-    'generate-daily-schedule': {
-        'task': 'app.tasks.email_tasks.generate_daily_schedule_task',
-        'schedule': crontab(hour=8, minute=30),  # Daily at 8:30 AM
+    # Cleanup old schedules
+    'cleanup-old-schedules': {
+        'task': 'app.tasks.email_tasks.cleanup_old_schedules_task',
+        'schedule': crontab(hour=2, minute=0),  # Daily at 2 AM
     },
 }
 

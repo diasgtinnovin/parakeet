@@ -17,6 +17,7 @@ class Account(db.Model):
     account_type = db.Column(db.String(20), default='pool')  # 'warmup' or 'pool'
     warmup_target = db.Column(db.Integer, default=50)  # Target emails per day at full warmup
     warmup_day = db.Column(db.Integer, default=0)  # Current day in warmup schedule (0 = not started)
+    timezone = db.Column(db.String(50), default='Asia/Kolkata')  # Account timezone for business hours
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
