@@ -29,7 +29,8 @@ CLIENT_CONFIG = {
 
 SCOPES = [
     'https://www.googleapis.com/auth/gmail.send',
-    'https://www.googleapis.com/auth/gmail.readonly'
+    'https://www.googleapis.com/auth/gmail.readonly',
+    'https://www.googleapis.com/auth/gmail.modify'
 ]
 
 @oauth_bp.route('/login')
@@ -43,7 +44,8 @@ def oauth_login():
     
     authorization_url, state = flow.authorization_url(
         access_type='offline',
-        include_granted_scopes='true'
+        include_granted_scopes='true',
+        prompt='consent'  # ensure refresh_token is returned on reconnect
     )
     
     session['oauth_state'] = state

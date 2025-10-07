@@ -8,11 +8,17 @@ class Email(db.Model):
     subject = db.Column(db.String(500), nullable=False)
     content = db.Column(db.Text, nullable=False)
     tracking_pixel_id = db.Column(db.String(100), unique=True, nullable=False)
+    
+    # Engagement tracking
     is_opened = db.Column(db.Boolean, default=False)
     is_replied = db.Column(db.Boolean, default=False)
     sent_at = db.Column(db.DateTime, default=datetime.utcnow)
     opened_at = db.Column(db.DateTime, nullable=True)
     replied_at = db.Column(db.DateTime, nullable=True)
+    
+    # Gmail message IDs for proper threading
+    gmail_message_id = db.Column(db.String(255), nullable=True)  # Gmail's message ID
+    in_reply_to = db.Column(db.String(255), nullable=True)  # For threading replies
     
     def __repr__(self):
         return f'<Email {self.id} to {self.to_address}>'

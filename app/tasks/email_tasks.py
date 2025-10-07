@@ -170,6 +170,145 @@ def generate_schedule_for_account(account: Account, target_date: date) -> int:
 
 
 @celery.task
+def simulate_engagement_task():
+    """
+    Simulate engagement for pool accounts (open emails and send replies)
+    This task runs periodically to process unread emails in pool accounts
+    """
+    from app import create_app
+    from app.services.engagement_simulation_service import EngagementSimulationService
+    
+    app = create_app()
+    
+    with app.app_context():
+        try:
+            engagement_service = EngagementSimulationService()
+            ai_service = AIService(os.getenv('OPENAI_API_KEY'), use_ai=os.getenv('USE_OPENAI', 'false').lower() == 'true')
+            
+            # Get all active pool accounts
+            pool_accounts = Account.query.filter_by(
+                is_active=True,
+                account_type='pool'
+            ).all()
+            
+            if not pool_accounts:
+                logger.info("No pool accounts found for engagement simulation")
+                return "No pool accounts available"
+            
+            total_opened = 0
+            total_replied = 0
+            
+            for pool_account in pool_accounts:
+                try:
+                    # Authenticate with Gmail
+                    gmail_service = GmailService()
+                    oauth_token_data = pool_account.get_oauth_token_data()
+                    
+                    if not oauth_token_data or not gmail_service.authenticate_with_token(oauth_token_data):
+                        logger.warning(f"Gmail authentication failed for pool account {pool_account.email}")
+                        continue
+                    
+                    # Get unread emails from warmup accounts
+                    warmup_emails = Account.query.filter_by(
+                        is_active=True,
+                        account_type='warmup'
+                    ).all()
+                    
+                    if not warmup_emails:
+                        continue
+                    
+                    warmup_email_addresses = [acc.email for acc in warmup_emails]
+                    
+                    # Get unread emails
+                    unread_messages = gmail_service.get_unread_emails(max_results=20)
+                    
+                    # Filter messages from warmup accounts
+                    relevant_messages = [
+                        msg for msg in unread_messages
+                        if any(warmup_email in msg['from'] for warmup_email in warmup_email_addresses)
+                    ]
+                    
+                    logger.info(f"Pool account {pool_account.email}: Found {len(relevant_messages)} unread emails from warmup accounts")
+                    
+                    for message in relevant_messages:
+                        try:
+                            # Find the corresponding email record
+                            sender_email = message['from'].split('<')[-1].strip('>')
+                            email_record = Email.query.filter_by(
+                                to_address=pool_account.email,
+                                is_opened=False
+                            ).filter(
+                                Email.subject == message['subject']
+                            ).first()
+                            
+                            if not email_record:
+                                logger.debug(f"No matching email record found for message {message['id']}")
+                                # Still mark as read to avoid processing again
+                                gmail_service.mark_as_read(message['id'])
+                                continue
+                            
+                            # Check if enough time has passed since email was received
+                            if not engagement_service.should_process_email(email_record.sent_at):
+                                logger.debug(f"Email {email_record.id} not ready to process yet")
+                                continue
+                            
+                            # Wait realistic delay (simulated - in production this would be handled by scheduling)
+                            # For now, we process immediately since the task runs periodically
+                            
+                            # Mark email as read via Gmail API
+                            if gmail_service.mark_as_read(message['id']):
+                                email_record.is_opened = True
+                                email_record.opened_at = datetime.utcnow()
+                                email_record.gmail_message_id = message['message_id']
+                                db.session.commit()
+                                total_opened += 1
+                                logger.info(f"✓ Marked email {email_record.id} as opened")
+                                
+                                # Decide whether to reply
+                                if engagement_service.should_reply():
+                                    # Wait realistic delay before replying (simulated)
+                                    # In production, this could be a separate scheduled task
+                                    
+                                    # Generate AI reply
+                                    reply_content_data = ai_service.generate_email_content(email_type='reply')
+                                    reply_content = reply_content_data['content']
+                                    
+                                    # Send reply (without tracking pixel)
+                                    reply_message_id = gmail_service.send_reply(
+                                        to_address=sender_email,
+                                        subject=message['subject'],
+                                        content=reply_content,
+                                        in_reply_to_id=message['message_id']
+                                    )
+                                    
+                                    if reply_message_id:
+                                        email_record.is_replied = True
+                                        email_record.replied_at = datetime.utcnow()
+                                        email_record.in_reply_to = message['message_id']
+                                        db.session.commit()
+                                        total_replied += 1
+                                        logger.info(f"✓ Sent reply for email {email_record.id}")
+                            
+                        except Exception as e:
+                            logger.error(f"Error processing message {message['id']}: {e}")
+                            db.session.rollback()
+                            continue
+                
+                except Exception as e:
+                    logger.error(f"Error processing pool account {pool_account.email}: {e}")
+                    db.session.rollback()
+                    continue
+            
+            result_msg = f"Engagement simulation completed: {total_opened} emails opened, {total_replied} replies sent"
+            logger.info(result_msg)
+            return result_msg
+            
+        except Exception as e:
+            logger.error(f"Error in simulate_engagement_task: {e}")
+            db.session.rollback()
+            return f"Error: {str(e)}"
+
+@celery.task
 def send_scheduled_emails_task():
     """
     Send emails that are scheduled for now
@@ -275,7 +414,7 @@ def send_scheduled_email(schedule: EmailSchedule) -> bool:
         ai_service = AIService(os.getenv('OPENAI_API_KEY'), use_ai=use_ai)
         content_data = ai_service.generate_email_content()
         
-        # Generate tracking pixel ID
+        # Generate tracking pixel ID (keep for database record but don't use in email)
         tracking_pixel_id = str(uuid.uuid4())
         
         # Authenticate and send via Gmail
@@ -288,11 +427,12 @@ def send_scheduled_email(schedule: EmailSchedule) -> bool:
             db.session.commit()
             return False
         
+        # Send email WITHOUT tracking pixel
         message_id = gmail_service.send_email(
             recipient_email,
             content_data['subject'],
             content_data['content'],
-            tracking_pixel_id
+            tracking_pixel_id=None  # No tracking pixel
         )
         
         if not message_id:
@@ -541,6 +681,11 @@ celery.conf.beat_schedule = {
         'schedule': crontab(minute='*/5'),  # Every 5 minutes
     },
     
+    # Simulate engagement (open emails and send replies) - runs every 3 minutes
+    'simulate-engagement': {
+        'task': 'app.tasks.email_tasks.simulate_engagement_task',
+        'schedule': crontab(minute='*/3'),  # Every 3 minutes
+    },
     # Advance warmup day once daily
     'advance-warmup-day': {
         'task': 'app.tasks.email_tasks.advance_warmup_day_task',

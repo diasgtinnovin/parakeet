@@ -44,3 +44,8 @@ natural|Casual hello|{greeting} {human_quirk}! {casual_phrase} {filler_phrase} {
 quick|Hey!|{greeting} {casual_phrase} {closing}
 quick|Quick hello|{greeting} {filler_phrase} just saying hi! {closing}
 quick|Thinking of you|{greeting} {casual_phrase} {emotional_touch} {closing} 
+
+reply|Thanks!|Thanks for reaching out! {casual_phrase} {closing}
+reply|Got it|Got your message! {casual_phrase} {closing}
+reply|Hey|Hey! {greeting} Thanks for the email. {closing}
+reply|Appreciate it|{greeting} I appreciate you reaching out. {closing}
