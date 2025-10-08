@@ -201,6 +201,61 @@ class GmailService:
         except Exception as e:
             logger.error(f"Error getting unread emails: {e}")
             return []
+
+    def get_unread_emails_from_any(self, sender_emails, max_results=50):
+        """
+        Get unread emails from any of the provided sender emails.
+        Returns detailed message dicts like get_unread_emails().
+        """
+        try:
+            if not sender_emails:
+                return []
+            # Build OR query for senders
+            senders_query = " OR ".join([f"from:{addr}" for addr in sender_emails])
+            query = f"is:unread in:inbox ({senders_query})"
+
+            results = self.service.users().messages().list(
+                userId='me',
+                q=query,
+                maxResults=max_results
+            ).execute()
+
+            messages = results.get('messages', [])
+            if not messages:
+                return []
+
+            detailed_messages = []
+            for msg in messages:
+                try:
+                    msg_detail = self.service.users().messages().get(
+                        userId='me',
+                        id=msg['id'],
+                        format='full'
+                    ).execute()
+
+                    headers = msg_detail.get('payload', {}).get('headers', [])
+                    from_email = next((h['value'] for h in headers if h['name'].lower() == 'from'), '')
+                    subject = next((h['value'] for h in headers if h['name'].lower() == 'subject'), '')
+                    message_id = next((h['value'] for h in headers if h['name'].lower() == 'message-id'), '')
+                    date = next((h['value'] for h in headers if h['name'].lower() == 'date'), '')
+
+                    detailed_messages.append({
+                        'id': msg['id'],
+                        'from': from_email,
+                        'subject': subject,
+                        'message_id': message_id,
+                        'snippet': msg_detail.get('snippet', ''),
+                        'date': date,
+                        'internal_date': msg_detail.get('internalDate', '')
+                    })
+                except Exception as e:
+                    logger.error(f"Error getting message details for {msg['id']}: {e}")
+                    continue
+
+            return detailed_messages
+        except Exception as e:
+            logger.error(f"Error getting unread emails from senders: {e}")
+            return []
     
     def mark_as_read(self, message_id):
         """

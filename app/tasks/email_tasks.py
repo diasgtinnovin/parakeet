@@ -83,10 +83,11 @@ def generate_daily_schedules_task():
             
             logger.info(f"Daily schedule generation complete: {total_schedules_created} schedules created")
             return f"Generated {total_schedules_created} schedules for {len(warmup_accounts)} accounts"
-            
         except Exception as e:
             logger.error(f"Error in generate_daily_schedules_task: {e}")
             return f"Error: {str(e)}"
+        finally:
+            db.session.remove()
 
 
 def generate_schedule_for_account(account: Account, target_date: date) -> int:
@@ -255,7 +256,12 @@ def simulate_engagement_task():
                             # Wait realistic delay (simulated - in production this would be handled by scheduling)
                             # For now, we process immediately since the task runs periodically
                             
-                            # Mark email as read via Gmail API
+                            # Decide whether to open this email
+                            if not engagement_service.should_open():
+                                logger.debug(f"Skipping open for email record {email_record.id} based on probability")
+                                continue
+
+                            # Mark email as read via Gmail API (open first, then consider reply)
                             if gmail_service.mark_as_read(message['id']):
                                 email_record.is_opened = True
                                 email_record.opened_at = datetime.utcnow()
@@ -371,10 +377,11 @@ def send_scheduled_emails_task():
                 logger.info(f"Sent {emails_sent} scheduled email(s)")
             
             return f"Sent {emails_sent} emails"
-            
         except Exception as e:
             logger.error(f"Error in send_scheduled_emails_task: {e}")
             return f"Error: {str(e)}"
+        finally:
+            db.session.remove()
 
 
 def send_scheduled_email(schedule: EmailSchedule) -> bool:
@@ -489,7 +496,14 @@ def check_replies_task():
             ).all()
             
             total_replies = 0
-            
+
+            # Build list of pool account emails once
+            pool_accounts = Account.query.filter_by(
+                is_active=True,
+                account_type='pool'
+            ).all()
+            pool_emails = [acc.email for acc in pool_accounts]
+
             for account in warmup_accounts:
                 gmail_service = GmailService()
                 oauth_token_data = account.get_oauth_token_data()
@@ -497,31 +511,54 @@ def check_replies_task():
                 if not oauth_token_data or not gmail_service.authenticate_with_token(oauth_token_data):
                     continue
                 
-                # Check for replies
-                reply_count = gmail_service.check_replies(account.email)
-                
-                if reply_count > 0:
-                    # Update recent emails as replied
-                    recent_emails = Email.query.filter(
-                        Email.account_id == account.id,
-                        Email.is_replied == False,
-                        Email.sent_at >= db.func.date(db.func.now())
-                    ).limit(reply_count).all()
-                    
-                    for email in recent_emails:
-                        email.is_replied = True
-                        email.replied_at = db.func.now()
-                    
+                # Fetch unread messages from any pool sender to this warmup inbox
+                messages = gmail_service.get_unread_emails_from_any(pool_emails, max_results=50)
+                updated = 0
+
+                def normalize_subject(subj: str) -> str:
+                    s = subj or ''
+                    while s.strip().lower().startswith('re:'):
+                        s = s.strip()[3:].lstrip()
+                    return s
+
+                for msg in messages:
+                    try:
+                        from_header = msg.get('from', '')
+                        from_addr = from_header.split('<')[-1].strip('>') if '<' in from_header else from_header
+                        reply_subject = normalize_subject(msg.get('subject', ''))
+
+                        candidate = Email.query.filter(
+                            Email.account_id == account.id,
+                            Email.to_address == from_addr,
+                            Email.is_replied == False
+                        ).order_by(Email.sent_at.desc()).first()
+
+                        if candidate and normalize_subject(candidate.subject) == reply_subject:
+                            candidate.is_replied = True
+                            candidate.replied_at = db.func.now()
+                            db.session.flush()
+                            try:
+                                gmail_service.mark_as_read(msg['id'])
+                            except Exception:
+                                pass
+                            updated += 1
+                    except Exception as e:
+                        logger.error(f"Error matching reply for account {account.email}: {e}")
+                        db.session.rollback()
+                        continue
+
+                if updated:
                     db.session.commit()
-                    total_replies += reply_count
-                    logger.info(f"Updated {reply_count} replies for account {account.email}")
+                    total_replies += updated
+                    logger.info(f"Updated {updated} replies for account {account.email}")
             
             return f"Checked replies: {total_replies} new replies found"
-            
         except Exception as e:
             logger.error(f"Error in check_replies_task: {e}")
             db.session.rollback()
             return f"Error: {str(e)}"
+        finally:
+            db.session.remove()
 
 
 @celery.task
@@ -576,11 +613,12 @@ def advance_warmup_day_task():
             db.session.commit()
             
             return f"Warmup day advanced for {accounts_advanced} account(s)"
-            
         except Exception as e:
             logger.error(f"Error in advance_warmup_day_task: {e}")
             db.session.rollback()
             return f"Error: {str(e)}"
+        finally:
+            db.session.remove()
 
 
 @celery.task
@@ -629,10 +667,11 @@ def warmup_status_report_task():
                 logger.info(f"   Total sent: {total_emails} emails")
             
             return f"Status report generated for {len(warmup_accounts)} warmup account(s)"
-            
         except Exception as e:
             logger.error(f"Error in warmup_status_report_task: {e}")
             return f"Error: {str(e)}"
+        finally:
+            db.session.remove()
 
 
 @celery.task
@@ -654,11 +693,12 @@ def cleanup_old_schedules_task():
             
             logger.info(f"Cleaned up {deleted} old schedule entries")
             return f"Cleaned up {deleted} old schedules"
-            
         except Exception as e:
             logger.error(f"Error in cleanup_old_schedules_task: {e}")
             db.session.rollback()
             return f"Error: {str(e)}"
+        finally:
+            db.session.remove()
 
 
 # Celery Beat Schedule

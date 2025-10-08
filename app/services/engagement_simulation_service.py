@@ -7,15 +7,18 @@ logger = logging.getLogger(__name__)
 class EngagementSimulationService:
     """
     Service to simulate human-like email engagement behavior
-    - Opens emails after realistic delays
-    - Decides whether to reply (30-50% probability)
+    - Opens emails after realistic delays with high but not 100% probability
+    - Decides whether to reply (default ~60%)
     - Generates replies after realistic delays
     """
     
     def __init__(self):
         # Configuration for engagement simulation
         self.open_delay_range = (30, 600)  # 30 seconds to 10 minutes
-        self.reply_probability_range = (0.3, 0.5)  # 30-50% chance
+        # Most emails are opened, but not all
+        self.open_probability_range = (0.85, 0.95)  # 85%-95% chance
+        # Replies should be around 60%
+        self.reply_probability_range = (0.5, 0.6) 
         self.reply_delay_range = (300, 1800)  # 5-30 minutes after opening
         
     def calculate_open_delay(self) -> int:
@@ -36,7 +39,7 @@ class EngagementSimulationService:
     def should_reply(self) -> bool:
         """
         Decide whether to reply to an email
-        Returns True with 30-50% probability
+        Returns True with configured probability (~60%)
         """
         min_prob, max_prob = self.reply_probability_range
         reply_probability = random.uniform(min_prob, max_prob)
@@ -44,6 +47,17 @@ class EngagementSimulationService:
         
         logger.debug(f"Reply decision: {will_reply} (probability: {reply_probability:.2%})")
         return will_reply
+
+    def should_open(self) -> bool:
+        """
+        Decide whether to open an email.
+        High probability but not guaranteed (85%-95%).
+        """
+        min_prob, max_prob = self.open_probability_range
+        open_probability = random.uniform(min_prob, max_prob)
+        will_open = random.random() < open_probability
+        logger.debug(f"Open decision: {will_open} (probability: {open_probability:.2%})")
+        return will_open
     
     def calculate_reply_delay(self) -> int:
         """

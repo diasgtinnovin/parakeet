@@ -18,13 +18,17 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
     # Connection pooling configuration
+    # Allow tuning via env to avoid exhausting Postgres connections across workers
+    pool_size = int(os.getenv('DB_POOL_SIZE', '5'))
+    max_overflow = int(os.getenv('DB_MAX_OVERFLOW', '5'))
+    pool_recycle = int(os.getenv('DB_POOL_RECYCLE', '1800'))  # 30 minutes
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-        'pool_size': 10,           # Number of connections to maintain in pool
-        'max_overflow': 20,        # Additional connections beyond pool_size
-        'pool_timeout': 30,        # Timeout when getting connection from pool
-        'pool_recycle': 3600,      # Recycle connections after 1 hour
-        'pool_pre_ping': True,     # Validate connections before use
-        'echo': False              # Set to True for SQL debugging
+        'pool_size': pool_size,
+        'max_overflow': max_overflow,
+        'pool_timeout': 30,
+        'pool_recycle': pool_recycle,
+        'pool_pre_ping': True,
+        'echo': False
     }
     
     # Initialize extensions
