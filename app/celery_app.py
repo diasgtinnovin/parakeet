@@ -27,6 +27,7 @@ def make_celery(app=None):
         
         class ContextTask(celery.Task):
             def __call__(self, *args, **kwargs):
+                # Ensure each task runs within the Flask app context
                 with app.app_context():
                     return self.run(*args, **kwargs)
         
@@ -34,5 +35,7 @@ def make_celery(app=None):
     
     return celery
 
-# Create celery instance
-celery = make_celery()
+# Create a single Flask app per worker and bind Celery to it
+from app import create_app
+_flask_app = create_app()
+celery = make_celery(_flask_app)

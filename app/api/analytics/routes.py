@@ -30,7 +30,7 @@ def get_account_analytics(account_id):
         reply_rate = (replied_emails / total_emails * 100) if total_emails > 0 else 0
         
         # Calculate warmup score
-        warmup_score = min(100, int((open_rate * 0.6 + reply_rate * 0.4) * 2))
+        warmup_score = min(60, int((open_rate * 0.6 + reply_rate * 0.4) * 2))
         
         # Update account warmup score
         account.warmup_score = warmup_score
@@ -123,12 +123,12 @@ def get_dashboard_data():
             # Compute warmup score dynamically to avoid stale values
             computed_warmup_score = min(100, int((open_rate * 0.6 + reply_rate * 0.4) * 2))
             # Persist updated score (best effort; avoid failing the request)
-            try:
-                if account.warmup_score != computed_warmup_score:
-                    account.warmup_score = computed_warmup_score
-                    db.session.commit()
-            except Exception:
-                db.session.rollback()
+            # try:
+            #     if account.warmup_score != computed_warmup_score:
+            #         account.warmup_score = computed_warmup_score
+            #         db.session.commit()
+            # except Exception:
+            #     db.session.rollback()
             
             warmup_data.append({
                 'id': account.id,
@@ -145,7 +145,7 @@ def get_dashboard_data():
                 'total_replied': replied,
                 'open_rate': round(open_rate, 1),
                 'reply_rate': round(reply_rate, 1),
-                'warmup_score': computed_warmup_score,
+                'warmup_score': account.warmup_score,
                 'progress_percentage': round((account.daily_limit / account.warmup_target * 100), 1) if account.warmup_target > 0 else 0
             })
         

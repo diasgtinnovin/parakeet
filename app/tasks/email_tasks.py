@@ -12,6 +12,8 @@ import logging
 from datetime import datetime, timedelta, date
 from celery.schedules import crontab
 import pytz
+import random
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -22,11 +24,7 @@ def generate_daily_schedules_task():
     Generate daily email schedules for all warmup accounts
     Runs at midnight for each timezone
     """
-    from app import create_app
-    app = create_app()
-    
-    with app.app_context():
-        try:
+    try:
             # Get all unique timezones from warmup accounts
             warmup_accounts = Account.query.filter_by(
                 is_active=True,
@@ -83,11 +81,11 @@ def generate_daily_schedules_task():
             
             logger.info(f"Daily schedule generation complete: {total_schedules_created} schedules created")
             return f"Generated {total_schedules_created} schedules for {len(warmup_accounts)} accounts"
-        except Exception as e:
-            logger.error(f"Error in generate_daily_schedules_task: {e}")
-            return f"Error: {str(e)}"
-        finally:
-            db.session.remove()
+    except Exception as e:
+        logger.error(f"Error in generate_daily_schedules_task: {e}")
+        return f"Error: {str(e)}"
+    finally:
+        db.session.remove()
 
 
 def generate_schedule_for_account(account: Account, target_date: date) -> int:
@@ -176,13 +174,8 @@ def simulate_engagement_task():
     Simulate engagement for pool accounts (open emails and send replies)
     This task runs periodically to process unread emails in pool accounts
     """
-    from app import create_app
     from app.services.engagement_simulation_service import EngagementSimulationService
-    
-    app = create_app()
-    
-    with app.app_context():
-        try:
+    try:
             engagement_service = EngagementSimulationService()
             ai_service = AIService(os.getenv('OPENAI_API_KEY'), use_ai=os.getenv('USE_OPENAI', 'false').lower() == 'true')
             
@@ -308,11 +301,12 @@ def simulate_engagement_task():
             result_msg = f"Engagement simulation completed: {total_opened} emails opened, {total_replied} replies sent"
             logger.info(result_msg)
             return result_msg
-            
-        except Exception as e:
-            logger.error(f"Error in simulate_engagement_task: {e}")
-            db.session.rollback()
-            return f"Error: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error in simulate_engagement_task: {e}")
+        db.session.rollback()
+        return f"Error: {str(e)}"
+    finally:
+        db.session.remove()
 
 @celery.task
 def send_scheduled_emails_task():
@@ -320,11 +314,10 @@ def send_scheduled_emails_task():
     Send emails that are scheduled for now
     Runs frequently (every 1-2 minutes) to check for due emails
     """
-    from app import create_app
-    app = create_app()
-    
-    with app.app_context():
-        try:
+    random_delay = random.uniform(0, 60)
+    time.sleep(random_delay)
+
+    try:
             # Get all unique timezones
             timezones = db.session.query(Account.timezone).filter(
                 Account.is_active == True,
@@ -368,6 +361,8 @@ def send_scheduled_emails_task():
                     for schedule in due_schedules:
                         if send_scheduled_email(schedule):
                             emails_sent += 1
+                            time.sleep(random.uniform(1, 5))
+
                 
                 except Exception as e:
                     logger.error(f"Error processing timezone {tz_name}: {e}")
@@ -377,11 +372,11 @@ def send_scheduled_emails_task():
                 logger.info(f"Sent {emails_sent} scheduled email(s)")
             
             return f"Sent {emails_sent} emails"
-        except Exception as e:
-            logger.error(f"Error in send_scheduled_emails_task: {e}")
-            return f"Error: {str(e)}"
-        finally:
-            db.session.remove()
+    except Exception as e:
+        logger.error(f"Error in send_scheduled_emails_task: {e}")
+        return f"Error: {str(e)}"
+    finally:
+        db.session.remove()
 
 
 def send_scheduled_email(schedule: EmailSchedule) -> bool:
@@ -485,11 +480,7 @@ def send_scheduled_email(schedule: EmailSchedule) -> bool:
 @celery.task
 def check_replies_task():
     """Check for replies and update engagement metrics for warmup accounts"""
-    from app import create_app
-    app = create_app()
-    
-    with app.app_context():
-        try:
+    try:
             warmup_accounts = Account.query.filter_by(
                 is_active=True,
                 account_type='warmup'
@@ -553,22 +544,18 @@ def check_replies_task():
                     logger.info(f"Updated {updated} replies for account {account.email}")
             
             return f"Checked replies: {total_replies} new replies found"
-        except Exception as e:
-            logger.error(f"Error in check_replies_task: {e}")
-            db.session.rollback()
-            return f"Error: {str(e)}"
-        finally:
-            db.session.remove()
+    except Exception as e:
+        logger.error(f"Error in check_replies_task: {e}")
+        db.session.rollback()
+        return f"Error: {str(e)}"
+    finally:
+        db.session.remove()
 
 
 @celery.task
 def advance_warmup_day_task():
     """Advance warmup day for all warmup accounts (run once daily at midnight)"""
-    from app import create_app
-    app = create_app()
-    
-    with app.app_context():
-        try:
+    try:
             warmup_accounts = Account.query.filter_by(
                 is_active=True,
                 account_type='warmup'
@@ -613,22 +600,18 @@ def advance_warmup_day_task():
             db.session.commit()
             
             return f"Warmup day advanced for {accounts_advanced} account(s)"
-        except Exception as e:
-            logger.error(f"Error in advance_warmup_day_task: {e}")
-            db.session.rollback()
-            return f"Error: {str(e)}"
-        finally:
-            db.session.remove()
+    except Exception as e:
+        logger.error(f"Error in advance_warmup_day_task: {e}")
+        db.session.rollback()
+        return f"Error: {str(e)}"
+    finally:
+        db.session.remove()
 
 
 @celery.task
 def warmup_status_report_task():
     """Generate warmup status report for all accounts"""
-    from app import create_app
-    app = create_app()
-    
-    with app.app_context():
-        try:
+    try:
             warmup_accounts = Account.query.filter_by(
                 is_active=True,
                 account_type='warmup'
@@ -667,21 +650,17 @@ def warmup_status_report_task():
                 logger.info(f"   Total sent: {total_emails} emails")
             
             return f"Status report generated for {len(warmup_accounts)} warmup account(s)"
-        except Exception as e:
-            logger.error(f"Error in warmup_status_report_task: {e}")
-            return f"Error: {str(e)}"
-        finally:
-            db.session.remove()
+    except Exception as e:
+        logger.error(f"Error in warmup_status_report_task: {e}")
+        return f"Error: {str(e)}"
+    finally:
+        db.session.remove()
 
 
 @celery.task
 def cleanup_old_schedules_task():
     """Clean up old completed/failed schedules (older than 7 days)"""
-    from app import create_app
-    app = create_app()
-    
-    with app.app_context():
-        try:
+    try:
             cutoff_date = datetime.utcnow().date() - timedelta(days=7)
             
             deleted = EmailSchedule.query.filter(
@@ -693,12 +672,12 @@ def cleanup_old_schedules_task():
             
             logger.info(f"Cleaned up {deleted} old schedule entries")
             return f"Cleaned up {deleted} old schedules"
-        except Exception as e:
-            logger.error(f"Error in cleanup_old_schedules_task: {e}")
-            db.session.rollback()
-            return f"Error: {str(e)}"
-        finally:
-            db.session.remove()
+    except Exception as e:
+        logger.error(f"Error in cleanup_old_schedules_task: {e}")
+        db.session.rollback()
+        return f"Error: {str(e)}"
+    finally:
+        db.session.remove()
 
 
 # Celery Beat Schedule

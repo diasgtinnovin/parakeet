@@ -16,7 +16,7 @@ class EngagementSimulationService:
         # Configuration for engagement simulation
         self.open_delay_range = (30, 600)  # 30 seconds to 10 minutes
         # Most emails are opened, but not all
-        self.open_probability_range = (0.85, 0.95)  # 85%-95% chance
+        self.open_probability_range = (0.75, 0.85)  # 85%-95% chance
         # Replies should be around 60%
         self.reply_probability_range = (0.5, 0.6) 
         self.reply_delay_range = (300, 1800)  # 5-30 minutes after opening
