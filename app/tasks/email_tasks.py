@@ -679,6 +679,221 @@ def cleanup_old_schedules_task():
     finally:
         db.session.remove()
 
+# Add after line 680 (before the Celery Beat Schedule section)
+
+@celery.task
+def check_spam_folder_task():
+    """
+    Check spam folders of pool accounts for emails from warmup accounts
+    Recovers them and marks as not spam
+    Runs every 6 hours
+    """
+    try:
+        from app.models.spam_email import SpamEmail
+        
+        # Get all active pool accounts
+        pool_accounts = Account.query.filter_by(
+            is_active=True,
+            account_type='pool'
+        ).all()
+        
+        if not pool_accounts:
+            logger.info("No pool accounts found for spam checking")
+            return "No pool accounts available"
+        
+        # Get all warmup account email addresses
+        warmup_accounts = Account.query.filter_by(
+            is_active=True,
+            account_type='warmup'
+        ).all()
+        
+        if not warmup_accounts:
+            logger.info("No warmup accounts found for spam checking")
+            return "No warmup accounts to check"
+        
+        warmup_email_addresses = [acc.email for acc in warmup_accounts]
+        warmup_email_map = {acc.email: acc.id for acc in warmup_accounts}
+        
+        total_spam_found = 0
+        total_recovered = 0
+        total_failed = 0
+        
+        for pool_account in pool_accounts:
+            try:
+                # Authenticate with Gmail
+                gmail_service = GmailService()
+                oauth_token_data = pool_account.get_oauth_token_data()
+                
+                if not oauth_token_data or not gmail_service.authenticate_with_token(oauth_token_data):
+                    logger.warning(f"Gmail authentication failed for pool account {pool_account.email}")
+                    continue
+                
+                # Get spam emails from warmup accounts
+                spam_messages = gmail_service.get_spam_emails(
+                    sender_emails=warmup_email_addresses,
+                    max_results=100
+                )
+                
+                if not spam_messages:
+                    logger.debug(f"No spam found in {pool_account.email} from warmup accounts")
+                    continue
+                
+                logger.info(f"Found {len(spam_messages)} spam email(s) in {pool_account.email} from warmup accounts")
+                total_spam_found += len(spam_messages)
+                
+                for spam_msg in spam_messages:
+                    try:
+                        # Extract sender email
+                        from_header = spam_msg.get('from', '')
+                        from_addr = from_header.split('<')[-1].strip('>') if '<' in from_header else from_header
+                        
+                        to_header = spam_msg.get('to', '')
+                        to_addr = to_header.split('<')[-1].strip('>') if '<' in to_header else to_header
+                        
+                        # Verify sender is a warmup account
+                        sender_account_id = warmup_email_map.get(from_addr)
+                        if not sender_account_id:
+                            logger.debug(f"Skipping spam message from unknown sender: {from_addr}")
+                            continue
+                        
+                        # Check if already tracked
+                        existing_spam = SpamEmail.query.filter_by(
+                            gmail_message_id=spam_msg['message_id'],
+                            pool_account_id=pool_account.id
+                        ).first()
+                        
+                        if existing_spam and existing_spam.status == 'recovered':
+                            logger.debug(f"Spam already recovered: {spam_msg['message_id']}")
+                            continue
+                        
+                        # Try to find the original email record
+                        email_record = Email.query.filter_by(
+                            account_id=sender_account_id,
+                            to_address=pool_account.email,
+                            subject=spam_msg['subject']
+                        ).order_by(Email.sent_at.desc()).first()
+                        
+                        # Mark as not spam in Gmail
+                        if gmail_service.mark_not_spam(spam_msg['id']):
+                            # Create or update spam record
+                            if existing_spam:
+                                spam_record = existing_spam
+                                spam_record.increment_attempts()
+                            else:
+                                spam_record = SpamEmail(
+                                    email_id=email_record.id if email_record else None,
+                                    pool_account_id=pool_account.id,
+                                    sender_account_id=sender_account_id,
+                                    gmail_message_id=spam_msg['message_id'],
+                                    subject=spam_msg['subject'],
+                                    from_address=from_addr,
+                                    to_address=to_addr,
+                                    snippet=spam_msg.get('snippet', '')
+                                )
+                                db.session.add(spam_record)
+                            
+                            spam_record.mark_recovered()
+                            db.session.commit()
+                            
+                            total_recovered += 1
+                            logger.info(f"✓ Recovered spam email: {spam_msg['subject'][:50]} "
+                                       f"from {from_addr} to {pool_account.email}")
+                            
+                            # Small delay between operations
+                            time.sleep(random.uniform(1, 3))
+                            
+                        else:
+                            # Mark as failed
+                            if existing_spam:
+                                spam_record = existing_spam
+                                spam_record.increment_attempts()
+                            else:
+                                spam_record = SpamEmail(
+                                    email_id=email_record.id if email_record else None,
+                                    pool_account_id=pool_account.id,
+                                    sender_account_id=sender_account_id,
+                                    gmail_message_id=spam_msg['message_id'],
+                                    subject=spam_msg['subject'],
+                                    from_address=from_addr,
+                                    to_address=to_addr,
+                                    snippet=spam_msg.get('snippet', '')
+                                )
+                                db.session.add(spam_record)
+                            
+                            spam_record.mark_failed("Failed to mark as not spam")
+                            db.session.commit()
+                            
+                            total_failed += 1
+                            logger.error(f"✗ Failed to recover spam email: {spam_msg['subject'][:50]}")
+                    
+                    except Exception as e:
+                        logger.error(f"Error processing spam message {spam_msg.get('id')}: {e}")
+                        db.session.rollback()
+                        continue
+            
+            except Exception as e:
+                logger.error(f"Error checking spam for pool account {pool_account.email}: {e}")
+                db.session.rollback()
+                continue
+        
+        result_msg = (f"Spam check completed: {total_spam_found} found, "
+                     f"{total_recovered} recovered, {total_failed} failed")
+        logger.info(result_msg)
+        return result_msg
+        
+    except Exception as e:
+        logger.error(f"Error in check_spam_folder_task: {e}")
+        db.session.rollback()
+        return f"Error: {str(e)}"
+    finally:
+        db.session.remove()
+
+
+@celery.task
+def spam_report_task():
+    """Generate spam detection report"""
+    try:
+        from app.models.spam_email import SpamEmail
+        
+        # Get spam statistics
+        total_spam = SpamEmail.query.count()
+        recovered = SpamEmail.query.filter_by(status='recovered').count()
+        failed = SpamEmail.query.filter_by(status='failed').count()
+        pending = SpamEmail.query.filter_by(status='detected').count()
+        
+        # Get recent spam (last 24 hours)
+        yesterday = datetime.utcnow() - timedelta(days=1)
+        recent_spam = SpamEmail.query.filter(
+            SpamEmail.detected_at >= yesterday
+        ).count()
+        
+        # Get spam by sender
+        spam_by_sender = db.session.query(
+            Account.email,
+            db.func.count(SpamEmail.id).label('spam_count')
+        ).join(
+            SpamEmail, SpamEmail.sender_account_id == Account.id
+        ).group_by(Account.email).all()
+        
+        logger.info(f"📊 Spam Detection Report:")
+        logger.info(f"   Total tracked: {total_spam}")
+        logger.info(f"   Recovered: {recovered}")
+        logger.info(f"   Failed: {failed}")
+        logger.info(f"   Pending: {pending}")
+        logger.info(f"   Last 24h: {recent_spam}")
+        
+        if spam_by_sender:
+            logger.info(f"   Spam by sender:")
+            for email, count in spam_by_sender:
+                logger.info(f"     - {email}: {count} spam emails")
+        
+        return f"Spam report: {total_spam} total, {recovered} recovered, {failed} failed"
+        
+    except Exception as e:
+        logger.error(f"Error in spam_report_task: {e}")
+        return f"Error: {str(e)}"
+    finally:
+        db.session.remove()
 
 # Celery Beat Schedule
 celery.conf.beat_schedule = {
@@ -715,6 +930,20 @@ celery.conf.beat_schedule = {
     'warmup-status-report': {
         'task': 'app.tasks.email_tasks.warmup_status_report_task',
         'schedule': crontab(minute=0, hour='*/6'),  # Every 6 hours
+    },
+    
+      # Check spam folders every 6 hours
+    'check-spam-folders': {
+        'task': 'app.tasks.email_tasks.check_spam_folder_task',
+        'schedule': crontab(minute='*/1'),  # Every 3 minutes
+
+        # 'schedule': crontab(minute=0, hour='*/6'),  # Every 6 hours
+    },
+    
+    # Generate spam report daily
+    'spam-detection-report': {
+        'task': 'app.tasks.email_tasks.spam_report_task',
+        'schedule': crontab(hour=3, minute=30),  # Daily at 3:30 AM
     },
     
     # Cleanup old schedules

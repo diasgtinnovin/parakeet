@@ -16,7 +16,8 @@ class GmailService:
     SCOPES = [
         'https://www.googleapis.com/auth/gmail.send',
         'https://www.googleapis.com/auth/gmail.readonly',
-        'https://www.googleapis.com/auth/gmail.modify'  # Added for marking as read
+        'https://www.googleapis.com/auth/gmail.modify',  # Added for marking as read
+        'https://www.googleapis.com/auth/gmail.labels'  # Added for labeling emails
     ]
     
     def __init__(self, credentials_json=None):
@@ -294,3 +295,118 @@ class GmailService:
         except Exception as e:
             logger.error(f"Error checking replies: {e}")
             return 0
+
+
+    def get_spam_emails(self, sender_emails=None, max_results=100):
+        """
+        Get emails from spam folder
+        If sender_emails is provided, filter by those senders
+        Returns list of message objects with details
+        """
+        try:
+            query = "in:spam"
+            if sender_emails:
+                # Build OR query for senders
+                if isinstance(sender_emails, list) and len(sender_emails) > 0:
+                    senders_query = " OR ".join([f"from:{addr}" for addr in sender_emails])
+                    query = f"in:spam ({senders_query})"
+            
+            results = self.service.users().messages().list(
+                userId='me',
+                q=query,
+                maxResults=max_results
+            ).execute()
+            
+            messages = results.get('messages', [])
+            
+            if not messages:
+                return []
+            
+            # Get detailed information for each message
+            detailed_messages = []
+            for msg in messages:
+                try:
+                    msg_detail = self.service.users().messages().get(
+                        userId='me',
+                        id=msg['id'],
+                        format='full'
+                    ).execute()
+                    
+                    headers = msg_detail.get('payload', {}).get('headers', [])
+                    
+                    # Extract relevant headers
+                    from_email = next((h['value'] for h in headers if h['name'].lower() == 'from'), '')
+                    to_email = next((h['value'] for h in headers if h['name'].lower() == 'to'), '')
+                    subject = next((h['value'] for h in headers if h['name'].lower() == 'subject'), '')
+                    message_id = next((h['value'] for h in headers if h['name'].lower() == 'message-id'), '')
+                    date = next((h['value'] for h in headers if h['name'].lower() == 'date'), '')
+                    
+                    detailed_messages.append({
+                        'id': msg['id'],
+                        'from': from_email,
+                        'to': to_email,
+                        'subject': subject,
+                        'message_id': message_id,
+                        'snippet': msg_detail.get('snippet', ''),
+                        'date': date,
+                        'internal_date': msg_detail.get('internalDate', '')
+                    })
+                except Exception as e:
+                    logger.error(f"Error getting spam message details for {msg['id']}: {e}")
+                    continue
+            
+            return detailed_messages
+            
+        except Exception as e:
+            logger.error(f"Error getting spam emails: {e}")
+            return []
+    
+    def mark_not_spam(self, message_id):
+        """
+        Mark an email as not spam (remove SPAM label and move to inbox)
+        Also marks as read to avoid notification spam
+        """
+        try:
+            self.service.users().messages().modify(
+                userId='me',
+                id=message_id,
+                body={
+                    'removeLabelIds': ['SPAM'],
+                    'addLabelIds': ['INBOX', 'UNREAD']  # Move to inbox and keep unread for engagement
+                }
+            ).execute()
+            
+            logger.info(f"Marked message {message_id} as not spam and moved to inbox")
+            return True
+            
+        except HttpError as error:
+            logger.error(f"Gmail API error marking as not spam: {error}")
+            return False
+        except Exception as e:
+            logger.error(f"Error marking message as not spam: {e}")
+            return False
+    
+    def move_to_inbox_and_read(self, message_id):
+        """
+        Move message to inbox and mark as read (for processed spam recovery)
+        """
+        try:
+            self.service.users().messages().modify(
+                userId='me',
+                id=message_id,
+                body={
+                    'removeLabelIds': ['SPAM', 'UNREAD'],
+                    'addLabelIds': ['INBOX']
+                }
+            ).execute()
+            
+            logger.info(f"Moved message {message_id} to inbox and marked as read")
+            return True
+            
+        except HttpError as error:
+            logger.error(f"Gmail API error moving to inbox: {error}")
+            return False
+        except Exception as e:
+            logger.error(f"Error moving message to inbox: {e}")
+            return False
+    

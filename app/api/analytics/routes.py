@@ -86,6 +86,91 @@ def get_overview_analytics():
 # NEW: COMPREHENSIVE DASHBOARD DATA
 # ============================================
 
+# Add this route to the analytics blueprint
+
+@analytics_bp.route('/spam-stats', methods=['GET'])
+def get_spam_stats():
+    """Get spam detection and recovery statistics"""
+    try:
+        from app.models.spam_email import SpamEmail
+        
+        # Overall statistics
+        total_spam = SpamEmail.query.count()
+        recovered = SpamEmail.query.filter_by(status='recovered').count()
+        failed = SpamEmail.query.filter_by(status='failed').count()
+        pending = SpamEmail.query.filter_by(status='detected').count()
+        
+        # Recent spam (last 7 days)
+        week_ago = datetime.utcnow() - timedelta(days=7)
+        recent_spam = SpamEmail.query.filter(
+            SpamEmail.detected_at >= week_ago
+        ).all()
+        
+        # Recovery rate
+        recovery_rate = (recovered / total_spam * 100) if total_spam > 0 else 0
+        
+        # Spam by account
+        spam_by_sender = db.session.query(
+            Account.email,
+            Account.id,
+            db.func.count(SpamEmail.id).label('spam_count'),
+            db.func.sum(db.case([(SpamEmail.status == 'recovered', 1)], else_=0)).label('recovered_count')
+        ).join(
+            SpamEmail, SpamEmail.sender_account_id == Account.id
+        ).group_by(Account.id, Account.email).all()
+        
+        spam_by_pool = db.session.query(
+            Account.email,
+            Account.id,
+            db.func.count(SpamEmail.id).label('spam_count')
+        ).join(
+            SpamEmail, SpamEmail.pool_account_id == Account.id
+        ).group_by(Account.id, Account.email).all()
+        
+        # Recent spam details
+        recent_spam_details = [{
+            'id': spam.id,
+            'subject': spam.subject,
+            'from': spam.from_address,
+            'to': spam.to_address,
+            'detected_at': spam.detected_at.isoformat(),
+            'recovered_at': spam.recovered_at.isoformat() if spam.recovered_at else None,
+            'status': spam.status,
+            'recovery_attempts': spam.recovery_attempts
+        } for spam in recent_spam[:20]]  # Limit to 20 most recent
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'summary': {
+                    'total_spam': total_spam,
+                    'recovered': recovered,
+                    'failed': failed,
+                    'pending': pending,
+                    'recovery_rate': round(recovery_rate, 2)
+                },
+                'by_sender': [{
+                    'email': email,
+                    'account_id': acc_id,
+                    'spam_count': spam_count,
+                    'recovered_count': recovered_count,
+                    'recovery_rate': round((recovered_count / spam_count * 100) if spam_count > 0 else 0, 2)
+                } for email, acc_id, spam_count, recovered_count in spam_by_sender],
+                'by_pool_account': [{
+                    'email': email,
+                    'account_id': acc_id,
+                    'spam_count': spam_count
+                } for email, acc_id, spam_count in spam_by_pool],
+                'recent_spam': recent_spam_details
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @analytics_bp.route('/dashboard/data', methods=['GET'])
 def get_dashboard_data():
     """Get complete dashboard data including warmup and pool accounts"""
