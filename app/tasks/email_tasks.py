@@ -176,7 +176,6 @@ def simulate_engagement_task():
     """
     from app.services.engagement_simulation_service import EngagementSimulationService
     try:
-            engagement_service = EngagementSimulationService()
             ai_service = AIService(os.getenv('OPENAI_API_KEY'), use_ai=os.getenv('USE_OPENAI', 'false').lower() == 'true')
             
             # Get all active pool accounts
@@ -193,6 +192,14 @@ def simulate_engagement_task():
             total_replied = 0
             
             for pool_account in pool_accounts:
+                # Create engagement service with account-specific rates
+                engagement_service = EngagementSimulationService(
+                    open_rate=pool_account.open_rate,
+                    reply_rate=pool_account.reply_rate
+                )
+                
+                logger.info(f"Processing pool account: {pool_account.email} (open_rate={pool_account.open_rate:.0%}, reply_rate={pool_account.reply_rate:.0%})")
+                
                 try:
                     # Authenticate with Gmail
                     gmail_service = GmailService()
@@ -658,6 +665,53 @@ def warmup_status_report_task():
 
 
 @celery.task
+def calculate_warmup_scores_task():
+    """
+    Calculate and update warmup scores for all warmup accounts
+    Runs every 6 hours to keep scores fresh
+    """
+    try:
+        from app.services.warmup_score_service import calculate_and_update_warmup_score
+        
+        warmup_accounts = Account.query.filter_by(
+            is_active=True,
+            account_type='warmup'
+        ).all()
+        
+        if not warmup_accounts:
+            logger.info("No warmup accounts to calculate scores for")
+            return "No warmup accounts found"
+        
+        success_count = 0
+        error_count = 0
+        
+        for account in warmup_accounts:
+            try:
+                score_data = calculate_and_update_warmup_score(account.id, db.session)
+                logger.info(
+                    f"✅ Account {account.email}: Score = {score_data['total_score']} "
+                    f"({score_data['grade']}) - {score_data['status_message']}"
+                )
+                success_count += 1
+            except Exception as e:
+                logger.error(f"❌ Error calculating score for {account.email}: {e}")
+                error_count += 1
+        
+        result_msg = (
+            f"Warmup scores calculated: {success_count} successful, {error_count} errors. "
+            f"Total accounts: {len(warmup_accounts)}"
+        )
+        logger.info(result_msg)
+        return result_msg
+        
+    except Exception as e:
+        logger.error(f"Error in calculate_warmup_scores_task: {e}")
+        return f"Error: {str(e)}"
+    finally:
+        db.session.remove()
+
+
+@celery.task
 def cleanup_old_schedules_task():
     """Clean up old completed/failed schedules (older than 7 days)"""
     try:
@@ -926,6 +980,13 @@ celery.conf.beat_schedule = {
         'schedule': crontab(hour=0, minute=5),  # At 00:05 daily
     },
     
+    # Calculate warmup scores every 6 hours
+    'calculate-warmup-scores': {
+        'task': 'app.tasks.email_tasks.calculate_warmup_scores_task',
+        # 'schedule': crontab(minute=0, hour='*/6'), 
+        'schedule': crontab(minute='*/1'),  # Every 3 minutes
+    },
+    
     # Generate status report
     'warmup-status-report': {
         'task': 'app.tasks.email_tasks.warmup_status_report_task',
@@ -935,6 +996,7 @@ celery.conf.beat_schedule = {
       # Check spam folders every 6 hours
     'check-spam-folders': {
         'task': 'app.tasks.email_tasks.check_spam_folder_task',
+        # 'schedule': crontab(minute=0, hour='*/6'),  # Every 6 hours
         'schedule': crontab(minute='*/1'),  # Every 3 minutes
 
         # 'schedule': crontab(minute=0, hour='*/6'),  # Every 6 hours

@@ -19,6 +19,16 @@ def add_account():
             if field not in data:
                 return jsonify({'error': f'Missing required field: {field}'}), 400
         
+        # Validate optional rate fields (if provided)
+        open_rate = data.get('open_rate', 0.80)  # Default 80%
+        reply_rate = data.get('reply_rate', 0.55)  # Default 55%
+        
+        # Validate rates are between 0 and 1
+        if not (0 <= open_rate <= 1):
+            return jsonify({'error': 'open_rate must be between 0 and 1 (e.g., 0.80 for 80%)'}), 400
+        if not (0 <= reply_rate <= 1):
+            return jsonify({'error': 'reply_rate must be between 0 and 1 (e.g., 0.55 for 55%)'}), 400
+        
         # Check if account already exists
         existing_account = Account.query.filter_by(email=data['email']).first()
         if existing_account:
@@ -34,7 +44,9 @@ def add_account():
             email=data['email'],
             provider=data['provider'],
             daily_limit=data.get('daily_limit', 5),
-            warmup_score=0
+            warmup_score=0,
+            open_rate=open_rate,
+            reply_rate=reply_rate
         )
         
         # Set OAuth token data
@@ -46,7 +58,9 @@ def add_account():
         return jsonify({
             'message': 'Account added successfully',
             'account_id': account.id,
-            'email': account.email
+            'email': account.email,
+            'open_rate': f"{open_rate:.0%}",
+            'reply_rate': f"{reply_rate:.0%}"
         }), 201
         
     except Exception as e:
@@ -67,6 +81,8 @@ def list_accounts():
                 'provider': account.provider,
                 'daily_limit': account.daily_limit,
                 'warmup_score': account.warmup_score,
+                'open_rate': f"{account.open_rate:.0%}",
+                'reply_rate': f"{account.reply_rate:.0%}",
                 'created_at': account.created_at.isoformat()
             })
         

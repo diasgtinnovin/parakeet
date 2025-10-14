@@ -28,7 +28,8 @@ from app.tasks.email_tasks import (
     check_replies_task,
     advance_warmup_day_task,
     warmup_status_report_task,
-    cleanup_old_schedules_task
+    cleanup_old_schedules_task,
+    calculate_warmup_scores_task
 )
 
 # Configure Celery
@@ -79,6 +80,12 @@ celery.conf.beat_schedule = {
     'cleanup-old-schedules': {
         'task': 'app.tasks.email_tasks.cleanup_old_schedules_task',
         'schedule': crontab(hour=2, minute=0),  # Daily at 2 AM
+    },
+    
+    # Calculate warmup scores
+    'calculate-warmup-scores': {
+        'task': 'app.tasks.email_tasks.calculate_warmup_scores_task',
+        'schedule': crontab(minute=0, hour='*/6'),  # Every 6 hours
     },
 }
 

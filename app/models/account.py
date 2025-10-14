@@ -19,6 +19,10 @@ class Account(db.Model):
     warmup_day = db.Column(db.Integer, default=0)  # Current day in warmup schedule (0 = not started)
     timezone = db.Column(db.String(50), default='Asia/Kolkata')  # Account timezone for business hours
     
+    # NEW: Engagement rate customization (stored as 0-1 decimal values)
+    open_rate = db.Column(db.Float, default=0.80)  # Default 80% (average of 75-85%)
+    reply_rate = db.Column(db.Float, default=0.55)  # Default 55% (average of 50-60%)
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

@@ -7,19 +7,30 @@ logger = logging.getLogger(__name__)
 class EngagementSimulationService:
     """
     Service to simulate human-like email engagement behavior
-    - Opens emails after realistic delays with high but not 100% probability
-    - Decides whether to reply (default ~60%)
+    - Opens emails after realistic delays with customizable probability
+    - Decides whether to reply with customizable probability
     - Generates replies after realistic delays
     """
     
-    def __init__(self):
+    def __init__(self, open_rate=None, reply_rate=None):
+        """
+        Initialize with optional custom rates
+        
+        Args:
+            open_rate: Float between 0-1 (e.g., 0.80 for 80%). If None, uses default range.
+            reply_rate: Float between 0-1 (e.g., 0.55 for 55%). If None, uses default range.
+        """
         # Configuration for engagement simulation
         self.open_delay_range = (30, 600)  # 30 seconds to 10 minutes
-        # Most emails are opened, but not all
-        self.open_probability_range = (0.75, 0.85)  # 85%-95% chance
-        # Replies should be around 60%
-        self.reply_probability_range = (0.5, 0.6) 
         self.reply_delay_range = (300, 1800)  # 5-30 minutes after opening
+        
+        # Store custom rates or use defaults
+        self.custom_open_rate = open_rate
+        self.custom_reply_rate = reply_rate
+        
+        # Default ranges (used when no custom rate is provided)
+        self.default_open_probability_range = (0.75, 0.85)  # 75%-85% chance
+        self.default_reply_probability_range = (0.5, 0.6)   # 50%-60% chance
         
     def calculate_open_delay(self) -> int:
         """
@@ -39,10 +50,17 @@ class EngagementSimulationService:
     def should_reply(self) -> bool:
         """
         Decide whether to reply to an email
-        Returns True with configured probability (~60%)
+        Uses custom rate if provided, otherwise uses default range
         """
-        min_prob, max_prob = self.reply_probability_range
-        reply_probability = random.uniform(min_prob, max_prob)
+        if self.custom_reply_rate is not None:
+            # Use custom rate with small random variation (±5%)
+            variation = random.uniform(-0.05, 0.05)
+            reply_probability = max(0, min(1, self.custom_reply_rate + variation))
+        else:
+            # Use default range
+            min_prob, max_prob = self.default_reply_probability_range
+            reply_probability = random.uniform(min_prob, max_prob)
+        
         will_reply = random.random() < reply_probability
         
         logger.debug(f"Reply decision: {will_reply} (probability: {reply_probability:.2%})")
@@ -51,10 +69,17 @@ class EngagementSimulationService:
     def should_open(self) -> bool:
         """
         Decide whether to open an email.
-        High probability but not guaranteed (85%-95%).
+        Uses custom rate if provided, otherwise uses default range
         """
-        min_prob, max_prob = self.open_probability_range
-        open_probability = random.uniform(min_prob, max_prob)
+        if self.custom_open_rate is not None:
+            # Use custom rate with small random variation (±5%)
+            variation = random.uniform(-0.05, 0.05)
+            open_probability = max(0, min(1, self.custom_open_rate + variation))
+        else:
+            # Use default range
+            min_prob, max_prob = self.default_open_probability_range
+            open_probability = random.uniform(min_prob, max_prob)
+        
         will_open = random.random() < open_probability
         logger.debug(f"Open decision: {will_open} (probability: {open_probability:.2%})")
         return will_open
@@ -92,10 +117,21 @@ class EngagementSimulationService:
     
     def get_engagement_stats(self) -> dict:
         """Return current engagement configuration"""
-        return {
+        stats = {
             'open_delay_range_seconds': self.open_delay_range,
             'open_delay_range_human': f"{self.open_delay_range[0]//60}-{self.open_delay_range[1]//60} minutes",
-            'reply_probability_range': f"{self.reply_probability_range[0]:.0%}-{self.reply_probability_range[1]:.0%}",
             'reply_delay_range_seconds': self.reply_delay_range,
             'reply_delay_range_human': f"{self.reply_delay_range[0]//60}-{self.reply_delay_range[1]//60} minutes"
         }
+        
+        if self.custom_open_rate is not None:
+            stats['open_rate'] = f"{self.custom_open_rate:.0%} (custom)"
+        else:
+            stats['open_probability_range'] = f"{self.default_open_probability_range[0]:.0%}-{self.default_open_probability_range[1]:.0%} (default)"
+            
+        if self.custom_reply_rate is not None:
+            stats['reply_rate'] = f"{self.custom_reply_rate:.0%} (custom)"
+        else:
+            stats['reply_probability_range'] = f"{self.default_reply_probability_range[0]:.0%}-{self.default_reply_probability_range[1]:.0%} (default)"
+        
+        return stats

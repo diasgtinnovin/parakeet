@@ -14,7 +14,7 @@ def make_celery(app=None):
     
     # Configure Celery
     celery.conf.update(
-        task_serializer='json',
+        task_serializer='json',                                     
         accept_content=['json'],
         result_serializer='json',
         timezone='UTC',
