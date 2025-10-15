@@ -219,351 +219,214 @@ def signin_page():
     """Enhanced sign in page with engagement rate configuration"""
     html = """
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
-        <title>Email Warmup - Sign In</title>
-        <style>
-            body { 
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-                max-width: 700px; 
-                margin: 50px auto; 
-                padding: 20px; 
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                min-height: 100vh;
-            }
-            .container { 
-                background: white; 
-                padding: 40px; 
-                border-radius: 15px; 
-                box-shadow: 0 10px 40px rgba(0,0,0,0.2); 
-            }
-            h1 { 
-                color: #333; 
-                margin-bottom: 10px; 
-                font-size: 32px;
-                text-align: center;
-            }
-            h2 { 
-                color: #666; 
-                text-align: center; 
-                font-weight: normal;
-                margin-bottom: 30px;
-            }
-            .info { 
-                background: #e8f4ff; 
-                padding: 20px; 
-                border-radius: 10px; 
-                margin: 20px 0; 
-                border-left: 5px solid #4285f4;
-            }
-            .info h3 { margin-top: 0; color: #1a73e8; }
-            .info ul { margin: 10px 0; padding-left: 20px; }
-            .info li { margin: 8px 0; color: #333; }
-            
-            .form-section {
-                background: #f8f9fa;
-                padding: 25px;
-                border-radius: 10px;
-                margin: 25px 0;
-                border: 1px solid #e0e0e0;
-            }
-            .form-section h3 {
-                margin-top: 0;
-                color: #333;
-                font-size: 18px;
-                margin-bottom: 20px;
-                border-bottom: 2px solid #667eea;
-                padding-bottom: 10px;
-            }
-            
-            .form-group {
-                margin-bottom: 20px;
-            }
-            
-            label {
-                display: block;
-                margin-bottom: 8px;
-                color: #333;
-                font-weight: 600;
-                font-size: 14px;
-            }
-            
-            .label-description {
-                font-size: 12px;
-                color: #666;
-                font-weight: normal;
-                margin-top: 4px;
-                display: block;
-            }
-            
-            input[type="number"],
-            select {
-                width: 100%;
-                padding: 12px;
-                border: 2px solid #e0e0e0;
-                border-radius: 8px;
-                font-size: 14px;
-                transition: border-color 0.3s;
-                box-sizing: border-box;
-            }
-            
-            input[type="number"]:focus,
-            select:focus {
-                outline: none;
-                border-color: #667eea;
-            }
-            
-            .input-group {
-                display: flex;
-                align-items: center;
-            }
-            
-            .input-group input {
-                flex: 1;
-            }
-            
-            .input-suffix {
-                margin-left: 10px;
-                color: #666;
-                font-weight: 600;
-            }
-            
-            .slider-container {
-                margin-top: 10px;
-            }
-            
-            input[type="range"] {
-                width: 100%;
-                height: 8px;
-                border-radius: 5px;
-                background: #e0e0e0;
-                outline: none;
-                -webkit-appearance: none;
-            }
-            
-            input[type="range"]::-webkit-slider-thumb {
-                -webkit-appearance: none;
-                appearance: none;
-                width: 20px;
-                height: 20px;
-                border-radius: 50%;
-                background: #667eea;
-                cursor: pointer;
-            }
-            
-            input[type="range"]::-moz-range-thumb {
-                width: 20px;
-                height: 20px;
-                border-radius: 50%;
-                background: #667eea;
-                cursor: pointer;
-                border: none;
-            }
-            
-            .slider-value {
-                text-align: center;
-                font-size: 24px;
-                font-weight: bold;
-                color: #667eea;
-                margin-top: 8px;
-            }
-            
-            .google-btn { 
-                background: linear-gradient(135deg, #4285f4 0%, #357ae8 100%);
-                color: white; 
-                padding: 16px 32px; 
-                border: none; 
-                border-radius: 10px; 
-                font-size: 18px; 
-                cursor: pointer; 
-                width: 100%;
-                margin: 20px 0;
-                font-weight: 600;
-                box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);
-                transition: all 0.3s;
-            }
-            .google-btn:hover { 
-                background: linear-gradient(135deg, #357ae8 0%, #2a62c4 100%);
-                box-shadow: 0 6px 20px rgba(66, 133, 244, 0.4);
-                transform: translateY(-2px);
-            }
-            
-            .help-text {
-                background: #fff3cd;
-                padding: 15px;
-                border-radius: 8px;
-                margin: 15px 0;
-                border-left: 4px solid #ffc107;
-                font-size: 13px;
-                color: #856404;
-            }
-            
-            .account-type-options {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 15px;
-                margin-top: 10px;
-            }
-            
-            .account-type-option {
-                border: 2px solid #e0e0e0;
-                border-radius: 8px;
-                padding: 15px;
-                cursor: pointer;
-                transition: all 0.3s;
-                text-align: center;
-            }
-            
-            .account-type-option:hover {
-                border-color: #667eea;
-                background: #f8f9ff;
-            }
-            
-            .account-type-option.selected {
-                border-color: #667eea;
-                background: #f8f9ff;
-            }
-            
-            .account-type-option input[type="radio"] {
-                display: none;
-            }
-            
-            .account-type-option .title {
-                font-weight: 600;
-                color: #333;
-                margin-bottom: 5px;
-            }
-            
-            .account-type-option .description {
-                font-size: 12px;
-                color: #666;
-            }
-        </style>
-        <script>
-            function updateSliderValue(sliderId, displayId) {
-                const slider = document.getElementById(sliderId);
-                const display = document.getElementById(displayId);
-                const hiddenInput = document.getElementById(sliderId + '_value');
-                
-                slider.addEventListener('input', function() {
-                    display.textContent = this.value + '%';
-                    hiddenInput.value = this.value;
-                });
-            }
-            
-            function selectAccountType(type) {
-                document.querySelectorAll('.account-type-option').forEach(opt => {
-                    opt.classList.remove('selected');
-                });
-                document.getElementById('type_' + type).classList.add('selected');
-                document.getElementById('account_type').value = type;
-            }
-            
-            window.onload = function() {
-                updateSliderValue('open_rate_slider', 'open_rate_display');
-                updateSliderValue('reply_rate_slider', 'reply_rate_display');
-                selectAccountType('pool'); // Default selection
-            }
-        </script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Email Warmup — Sign In</title>
+    <style>
+        :root{
+        --bg: #fff8f3;
+        --card: #ffffff;
+        --muted: #7b6f63;
+        --border: #ecdcd2;
+        --accent: #3b2f2f;
+        --accent-soft: #8b7766;
+        --highlight: #f1c9a8; /* warm accent */
+        --radius: 14px;
+        font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        }
+
+        *{box-sizing:border-box}
+        html,body{height:100%;margin:0;background:var(--bg);color:var(--accent);-webkit-font-smoothing:antialiased}
+        .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:36px}
+
+        .card{width:100%;max-width:900px;background:var(--card);border-radius:var(--radius);box-shadow:0 12px 40px rgba(0,0,0,0.08);border:1px solid var(--border);overflow:hidden}
+
+        .grid{display:grid;grid-template-columns:420px 1fr}
+        @media (max-width:880px){.grid{grid-template-columns:1fr}}
+
+        .hero{padding:30px 28px;background:linear-gradient(180deg,#fff1e6,#ffffff);border-right:1px solid var(--border)}
+        .brand{display:flex;align-items:center;gap:12px}
+        .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(180deg,#fff5ed,#ffffff);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);font-weight:700;color:var(--accent);font-size:18px}
+        h1{margin:12px 0 6px;font-size:20px;letter-spacing:-0.2px;color:var(--accent)}
+        p.lead{margin:0;color:var(--muted);font-size:13px}
+
+        .illus{margin-top:18px;border-radius:10px;overflow:hidden;background:linear-gradient(180deg,#fff6ed,#ffffff);padding:12px;border:1px solid var(--border)}
+        .illus svg{width:100%;height:140px;display:block}
+
+        .content{padding:28px}
+        .section{margin-bottom:18px}
+        .section .title{font-size:13px;color:var(--muted);margin-bottom:10px;font-weight:600}
+
+        .panel{background:#fff;border:1px solid var(--border);padding:14px;border-radius:10px}
+
+        .account-type{display:flex;gap:12px}
+        .account-type button{flex:1;text-align:left;padding:12px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:14px;color:var(--accent);transition:all .18s}
+        .account-type button.selected{border-color:var(--highlight);background:linear-gradient(180deg,#fff3e8,#ffffff);box-shadow:0 6px 18px rgba(0,0,0,0.05)}
+        .account-type .label{display:block;font-weight:700}
+        .account-type .desc{display:block;font-size:12px;color:var(--accent-soft);margin-top:6px}
+
+        label{display:block;font-size:13px;color:var(--muted);margin-bottom:8px}
+        .help{font-size:13px;color:var(--accent-soft);margin-top:8px}
+
+        input[type=number]{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);font-size:14px;background:#fff;color:var(--accent)}
+
+        .slider-row{display:flex;align-items:center;gap:12px}
+        input[type=range]{-webkit-appearance:none;width:100%;height:10px;background:transparent}
+        input[type=range]::-webkit-slider-runnable-track{height:10px;border-radius:8px;background:linear-gradient(90deg,#f6e4d4,#fff4eb)}
+        input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;margin-top:-6px;width:20px;height:20px;border-radius:50%;background:#fff7f2;border:1px solid var(--border);box-shadow:0 3px 8px rgba(0,0,0,0.05)}
+
+        .slider-value{min-width:64px;text-align:center;font-weight:700;color:var(--accent)}
+
+        .cta{margin-top:20px}
+        .google-btn{width:100%;display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:10px;border:1px solid var(--border);background:linear-gradient(180deg,#fff5ed,#ffffff);color:var(--accent);font-weight:700;cursor:pointer;transition:all .2s}
+        .google-btn:hover{background:linear-gradient(180deg,#fff1e6,#ffffff)}
+        .google-btn .g-icon{display:inline-block;margin-right:10px;border-radius:6px;padding:6px;border:1px solid var(--border);background:var(--highlight)}
+
+        .note{margin-top:12px;font-size:13px;color:var(--muted);text-align:center}
+
+        .features{margin-top:14px}
+        .features li{margin:8px 0;color:var(--muted);font-size:13px}
+
+        footer.small{padding:14px 28px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);text-align:center}
+
+    </style>
     </head>
     <body>
-        <div class="container">
-            <h1>🚀 Email Warmup Service</h1>
-            <h2>Configure Your Account</h2>
-            
-            <div class="info">
-                <h3>📋 Quick Setup Guide:</h3>
+    <div class="wrap">
+        <div class="card">
+        <div class="grid">
+
+            <aside class="hero">
+            <div class="brand">
+                <div class="logo">EW</div>
+                <div>
+                <h1>Welcome to Email Warmup</h1>
+                <p class="lead">Boost your inbox reputation and deliverability with smart, automated warmup.</p>
+                </div>
+            </div>
+
+            <div class="illus" aria-hidden="true">
+                <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+                <defs>
+                    <linearGradient id="g1" x1="0" x2="1">
+                    <stop offset="0" stop-color="#fff5ec"/>
+                    <stop offset="1" stop-color="#ffffff"/>
+                    </linearGradient>
+                </defs>
+                <rect width="600" height="200" fill="url(#g1)" />
+                <g fill="none" stroke="#e6d2c3" stroke-width="2">
+                    <path d="M40 150 q80 -100 160 -40 q80 60 160 -10 q80 -70 200 -10"/>
+                </g>
+                </svg>
+            </div>
+
+            <div class="features">
                 <ul>
-                    <li>✅ Configure your engagement preferences below</li>
-                    <li>✅ Sign in with your Gmail account</li>
-                    <li>✅ Start warming up your email automatically</li>
-                    <li>✅ Track your progress in real-time</li>
+                <li>• Gradual warmup automation</li>
+                <li>• Customizable open & reply behavior</li>
+                <li>• Real-time reputation growth insights</li>
                 </ul>
             </div>
-            
+            </aside>
+
+            <section class="content">
             <form action="/api/oauth/login" method="POST">
-                <div class="form-section">
-                    <h3>🎯 Account Type</h3>
-                    
-                    <div class="account-type-options">
-                        <div class="account-type-option" id="type_warmup" onclick="selectAccountType('warmup')">
-                            <input type="radio" name="account_type_radio" value="warmup">
-                            <div class="title">🔥 Warmup Account</div>
-                            <div class="description">This account sends warmup emails</div>
-                        </div>
-                        <div class="account-type-option" id="type_pool" onclick="selectAccountType('pool')">
-                            <input type="radio" name="account_type_radio" value="pool" checked>
-                            <div class="title">📧 Pool Account</div>
-                            <div class="description">This account receives & engages with emails</div>
-                        </div>
+
+                <div class="section">
+                <div class="title">Account type</div>
+                <div class="panel">
+                    <div class="account-type" role="tablist" aria-label="Account type">
+                    <button type="button" id="type_warmup" onclick="selectAccountType('warmup')">
+                        <span class="label">Warmup</span>
+                        <span class="desc">Sends warmup emails to build reputation</span>
+                    </button>
+                    <button type="button" id="type_pool" class="selected" onclick="selectAccountType('pool')">
+                        <span class="label">Pool</span>
+                        <span class="desc">Receives & engages with messages</span>
+                    </button>
                     </div>
                     <input type="hidden" id="account_type" name="account_type" value="pool">
-                    
-                    <div class="help-text">
-                        <strong>Note:</strong> You need at least 1 warmup account and 1+ pool accounts for the system to work.
-                    </div>
+                    <p class="help">Use a balanced mix of warmup and pool accounts for authentic interactions.</p>
                 </div>
-                
-                <div class="form-section">
-                    <h3>📊 Engagement Configuration</h3>
-                    
-                    <div class="form-group">
-                        <label>
-                            📬 Email Open Rate
-                            <span class="label-description">What percentage of emails should be opened?</span>
-                        </label>
-                        <div class="slider-container">
-                            <input type="range" id="open_rate_slider" min="50" max="95" value="80" step="5">
-                            <div class="slider-value" id="open_rate_display">80%</div>
-                        </div>
-                        <input type="hidden" id="open_rate_slider_value" name="open_rate" value="80">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>
-                            💬 Reply Rate
-                            <span class="label-description">What percentage of opened emails should get a reply?</span>
-                        </label>
-                        <div class="slider-container">
-                            <input type="range" id="reply_rate_slider" min="30" max="80" value="55" step="5">
-                            <div class="slider-value" id="reply_rate_display">55%</div>
-                        </div>
-                        <input type="hidden" id="reply_rate_slider_value" name="reply_rate" value="55">
-                    </div>
-                    
-                    <div class="help-text">
-                        <strong>💡 Recommended:</strong> Open Rate: 75-85%, Reply Rate: 50-60% for natural engagement patterns.
-                    </div>
                 </div>
-                
-                <div class="form-section">
-                    <h3>⚙️ Volume Settings</h3>
-                    
-                    <div class="form-group">
-                        <label>
-                            📨 Daily Email Limit
-                            <span class="label-description">Maximum emails per day (for warmup accounts)</span>
-                        </label>
-                        <div class="input-group">
-                            <input type="number" id="daily_limit" name="daily_limit" value="5" min="1" max="100">
-                            <span class="input-suffix">emails/day</span>
-                        </div>
-                    </div>
-                    
-                    <div class="help-text">
-                        <strong>⚠️ Start Low:</strong> Begin with 5-10 emails/day and gradually increase as your warmup score improves.
-                    </div>
+
+                <div class="section">
+                <div class="title">Volume / Limits</div>
+                <div class="panel">
+                    <label for="daily_limit">Daily email limit</label>
+                    <input type="number" id="daily_limit" name="daily_limit" value="5" min="1" max="100">
+                    <p class="help">Start with 5–10/day. The system will increase safely during warmup.</p>
                 </div>
-                
-                <button type="submit" class="google-btn">
-                    🔐 Continue with Google
+                </div>
+
+                <div class="section">
+                <div class="title">Engagement configuration</div>
+                <div class="panel">
+
+                    <div style="margin-bottom:12px">
+                    <label for="open_rate_slider">Email Open Rate <span style="font-weight:700;color:var(--accent);">(<span id="open_rate_display">80%</span>)</span></label>
+                    <div class="slider-row">
+                        <input type="range" id="open_rate_slider" min="50" max="95" value="80" step="5" oninput="updateSliderValue('open_rate_slider','open_rate_display')">
+                    </div>
+                    <input type="hidden" id="open_rate_slider_value" name="open_rate" value="80">
+                    </div>
+
+                    <div>
+                    <label for="reply_rate_slider">Reply Rate <span style="font-weight:700;color:var(--accent);">(<span id="reply_rate_display">55%</span>)</span></label>
+                    <div class="slider-row">
+                        <input type="range" id="reply_rate_slider" min="30" max="80" value="55" step="5" oninput="updateSliderValue('reply_rate_slider','reply_rate_display')">
+                    </div>
+                    <input type="hidden" id="reply_rate_slider_value" name="reply_rate" value="55">
+                    </div>
+
+                    <p class="help" style="margin-top:12px">Recommended: Open Rate 75–85% · Reply Rate 50–60% for natural engagement.</p>
+
+                </div>
+                </div>
+
+                <div class="section cta">
+                <button class="google-btn" type="submit">
+                    <span class="g-icon">📨</span>
+                    Continue with Google
                 </button>
+                <p class="note">Connect seamlessly and let smart automation handle your daily warmups.</p>
+                </div>
+
             </form>
-            
-            <p style="text-align: center; color: #666; font-size: 13px;">
-                <small>🔒 This will securely authenticate your Gmail account. Your data is safe.</small>
-            </p>
+            </section>
+
         </div>
+        <footer class="small">By continuing you agree to our <a href="#">Terms</a> and <a href="#">Privacy</a>.</footer>
+        </div>
+    </div>
+
+    <script>
+        function updateSliderValue(sliderId, displayId) {
+        var slider = document.getElementById(sliderId);
+        var display = document.getElementById(displayId);
+        display.textContent = slider.value + '%';
+        if (sliderId === 'open_rate_slider') {
+            document.getElementById('open_rate_slider_value').value = slider.value;
+        } else if (sliderId === 'reply_rate_slider') {
+            document.getElementById('reply_rate_slider_value').value = slider.value;
+        }
+        }
+
+        function selectAccountType(type) {
+        document.querySelectorAll('.account-type button').forEach(function(b){b.classList.remove('selected')});
+        var el = document.getElementById('type_' + type);
+        if (el) el.classList.add('selected');
+        document.getElementById('account_type').value = type;
+        }
+
+        document.addEventListener('DOMContentLoaded', function(){
+        updateSliderValue('open_rate_slider','open_rate_display');
+        updateSliderValue('reply_rate_slider','reply_rate_display');
+        selectAccountType('pool');
+        });
+    </script>
     </body>
     </html>
     """
