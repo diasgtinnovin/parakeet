@@ -99,6 +99,34 @@ class EngagementSimulationService:
         logger.debug(f"Calculated reply delay: {delay} seconds ({delay//60}m {delay%60}s)")
         return delay
     
+    def should_mark_important(self) -> bool:
+        """
+        Decide whether to mark an opened email as important
+        Uses a probability range of 15%-25%
+        """
+        important_probability_range = (0.15, 0.25)
+        min_prob, max_prob = important_probability_range
+        important_probability = random.uniform(min_prob, max_prob)
+        
+        will_mark_important = random.random() < important_probability
+        
+        logger.debug(f"Important decision: {will_mark_important} (probability: {important_probability:.2%})")
+        return will_mark_important
+    
+    def calculate_important_delay(self) -> int:
+        """
+        Calculate delay before marking email as important (in seconds)
+        Random delay between 45 and 100 seconds
+        """
+        min_delay = 45
+        max_delay = 100
+        
+        # Use uniform distribution for the delay
+        delay = random.randint(min_delay, max_delay)
+        
+        logger.debug(f"Calculated important delay: {delay} seconds")
+        return delay
+    
     def should_process_email(self, email_received_time: datetime) -> bool:
         """
         Determine if email is ready to be processed (opened)

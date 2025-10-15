@@ -225,178 +225,137 @@ def signin_page():
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Email Warmup — Sign In</title>
     <style>
-        :root{
-        --bg: #fff8f3;
+        :root {
+        --main: #2baf43;
+        --main-light: #eaf8ec;
+        --bg: #f9fbf9;
         --card: #ffffff;
-        --muted: #7b6f63;
-        --border: #ecdcd2;
-        --accent: #3b2f2f;
-        --accent-soft: #8b7766;
-        --highlight: #f1c9a8; /* warm accent */
+        --text: #2f2f2f;
+        --muted: #6c6c6c;
+        --border: #d8e6da;
         --radius: 14px;
         font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
         }
 
-        *{box-sizing:border-box}
-        html,body{height:100%;margin:0;background:var(--bg);color:var(--accent);-webkit-font-smoothing:antialiased}
-        .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:36px}
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
 
-        .card{width:100%;max-width:900px;background:var(--card);border-radius:var(--radius);box-shadow:0 12px 40px rgba(0,0,0,0.08);border:1px solid var(--border);overflow:hidden}
+        .wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 36px; }
+        .card { width: 100%; max-width: 900px; background: var(--card); border-radius: var(--radius); box-shadow: 0 12px 40px rgba(0,0,0,0.06); border: 1px solid var(--border); overflow: hidden; }
 
-        .grid{display:grid;grid-template-columns:420px 1fr}
-        @media (max-width:880px){.grid{grid-template-columns:1fr}}
+        .grid { display: grid; grid-template-columns: 420px 1fr; }
+        @media (max-width:880px) { .grid { grid-template-columns: 1fr; } }
 
-        .hero{padding:30px 28px;background:linear-gradient(180deg,#fff1e6,#ffffff);border-right:1px solid var(--border)}
-        .brand{display:flex;align-items:center;gap:12px}
-        .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(180deg,#fff5ed,#ffffff);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);font-weight:700;color:var(--accent);font-size:18px}
-        h1{margin:12px 0 6px;font-size:20px;letter-spacing:-0.2px;color:var(--accent)}
-        p.lead{margin:0;color:var(--muted);font-size:13px}
+        .hero { padding: 36px 30px; background: linear-gradient(180deg, var(--main-light), #ffffff); border-right: 1px solid var(--border); }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .logo { width: 56px; height: 56px; border-radius: 12px; background: var(--main-light); display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); font-weight: 700; color: var(--main); font-size: 18px; }
+        h1 { margin: 12px 0 6px; font-size: 20px; color: var(--text); }
+        p.lead { margin: 0; color: var(--muted); font-size: 13px; }
 
-        .illus{margin-top:18px;border-radius:10px;overflow:hidden;background:linear-gradient(180deg,#fff6ed,#ffffff);padding:12px;border:1px solid var(--border)}
-        .illus svg{width:100%;height:140px;display:block}
+        .features { margin-top: 20px; }
+        .features li { margin: 8px 0; color: var(--muted); font-size: 13px; }
 
-        .content{padding:28px}
-        .section{margin-bottom:18px}
-        .section .title{font-size:13px;color:var(--muted);margin-bottom:10px;font-weight:600}
+        .content { padding: 30px; }
+        .section { margin-bottom: 20px; }
+        .title { font-size: 13px; color: var(--muted); margin-bottom: 10px; font-weight: 600; }
 
-        .panel{background:#fff;border:1px solid var(--border);padding:14px;border-radius:10px}
+        .panel { background: #fff; border: 1px solid var(--border); padding: 14px; border-radius: 10px; }
 
-        .account-type{display:flex;gap:12px}
-        .account-type button{flex:1;text-align:left;padding:12px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:14px;color:var(--accent);transition:all .18s}
-        .account-type button.selected{border-color:var(--highlight);background:linear-gradient(180deg,#fff3e8,#ffffff);box-shadow:0 6px 18px rgba(0,0,0,0.05)}
-        .account-type .label{display:block;font-weight:700}
-        .account-type .desc{display:block;font-size:12px;color:var(--accent-soft);margin-top:6px}
+        .account-type { display: flex; gap: 12px; }
+        .account-type button { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: #fff; cursor: pointer; font-size: 14px; color: var(--text); transition: all .2s; }
+        .account-type button.selected { border-color: var(--main); background: var(--main-light); box-shadow: 0 4px 12px rgba(43,175,67,0.1); }
 
-        label{display:block;font-size:13px;color:var(--muted);margin-bottom:8px}
-        .help{font-size:13px;color:var(--accent-soft);margin-top:8px}
+        input[type=number] { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 14px; background: #fff; color: var(--text); }
 
-        input[type=number]{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);font-size:14px;background:#fff;color:var(--accent)}
+        input[type=range] { -webkit-appearance: none; width: 100%; height: 10px; border-radius: 8px; background: var(--main-light); }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--main); cursor: pointer; }
 
-        .slider-row{display:flex;align-items:center;gap:12px}
-        input[type=range]{-webkit-appearance:none;width:100%;height:10px;background:transparent}
-        input[type=range]::-webkit-slider-runnable-track{height:10px;border-radius:8px;background:linear-gradient(90deg,#f6e4d4,#fff4eb)}
-        input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;margin-top:-6px;width:20px;height:20px;border-radius:50%;background:#fff7f2;border:1px solid var(--border);box-shadow:0 3px 8px rgba(0,0,0,0.05)}
+        .slider-value { min-width: 64px; text-align: center; font-weight: 700; color: var(--text); }
 
-        .slider-value{min-width:64px;text-align:center;font-weight:700;color:var(--accent)}
-
-        .cta{margin-top:20px}
-        .google-btn{width:100%;display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:10px;border:1px solid var(--border);background:linear-gradient(180deg,#fff5ed,#ffffff);color:var(--accent);font-weight:700;cursor:pointer;transition:all .2s}
-        .google-btn:hover{background:linear-gradient(180deg,#fff1e6,#ffffff)}
-        .google-btn .g-icon{display:inline-block;margin-right:10px;border-radius:6px;padding:6px;border:1px solid var(--border);background:var(--highlight)}
-
-        .note{margin-top:12px;font-size:13px;color:var(--muted);text-align:center}
-
-        .features{margin-top:14px}
-        .features li{margin:8px 0;color:var(--muted);font-size:13px}
-
-        footer.small{padding:14px 28px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);text-align:center}
-
+        .google-btn { width: 100%; display: flex; align-items: center; justify-content: center; padding: 14px 20px; border-radius: 10px; border: none; background: var(--main); color: #fff; font-weight: 600; cursor: pointer; font-size: 16px; transition: all 0.2s; }
+        .google-btn:hover { background: #25973b; }
+        .graph { margin-top: 20px; background: var(--main-light); height: 120px; border-radius: 10px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--main); font-weight: bold; font-size: 14px; }   
+        .note { margin-top: 12px; font-size: 13px; color: var(--muted); text-align: center; }
+        footer.small { padding: 14px 28px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); text-align: center; }
     </style>
     </head>
     <body>
     <div class="wrap">
         <div class="card">
         <div class="grid">
-
             <aside class="hero">
             <div class="brand">
                 <div class="logo">EW</div>
                 <div>
                 <h1>Welcome to Email Warmup</h1>
-                <p class="lead">Boost your inbox reputation and deliverability with smart, automated warmup.</p>
+                <p class="lead">Improve your deliverability through gradual, intelligent email warmup.</p>
                 </div>
             </div>
-
-            <div class="illus" aria-hidden="true">
-                <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-                <defs>
-                    <linearGradient id="g1" x1="0" x2="1">
-                    <stop offset="0" stop-color="#fff5ec"/>
-                    <stop offset="1" stop-color="#ffffff"/>
-                    </linearGradient>
-                </defs>
-                <rect width="600" height="200" fill="url(#g1)" />
-                <g fill="none" stroke="#e6d2c3" stroke-width="2">
-                    <path d="M40 150 q80 -100 160 -40 q80 60 160 -10 q80 -70 200 -10"/>
-                </g>
-                </svg>
-            </div>
-
+            <div class="graph">
+            <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="g1" x1="0" x2="1">
+                  <stop offset="0" stop-color="#eaf8ec"/>
+                  <stop offset="1" stop-color="#ffffff"/>
+                </linearGradient>
+              </defs>
+              <rect width="600" height="200" fill="url(#g1)" />
+              <g fill="none" stroke="#e6d2c3" stroke-width="2">
+                <path d="M40 150 q80 -100 160 -40 q80 60 160 -10 q80 -70 200 -10"/>
+              </g>
+            </svg>
+          </div>
             <div class="features">
                 <ul>
-                <li>• Gradual warmup automation</li>
-                <li>• Customizable open & reply behavior</li>
-                <li>• Real-time reputation growth insights</li>
+                <li>• Automated and adaptive warmup process</li>
+                <li>• Custom open & reply behavior settings</li>
+                <li>• Real-time analytics and insights</li>
                 </ul>
             </div>
             </aside>
 
             <section class="content">
             <form action="/api/oauth/login" method="POST">
-
                 <div class="section">
-                <div class="title">Account type</div>
+                <div class="title">Account Type</div>
                 <div class="panel">
-                    <div class="account-type" role="tablist" aria-label="Account type">
-                    <button type="button" id="type_warmup" onclick="selectAccountType('warmup')">
-                        <span class="label">Warmup</span>
-                        <span class="desc">Sends warmup emails to build reputation</span>
-                    </button>
-                    <button type="button" id="type_pool" class="selected" onclick="selectAccountType('pool')">
-                        <span class="label">Pool</span>
-                        <span class="desc">Receives & engages with messages</span>
-                    </button>
+                    <div class="account-type">
+                    <button type="button" id="type_warmup" onclick="selectAccountType('warmup')">Warmup</button>
+                    <button type="button" id="type_pool" class="selected" onclick="selectAccountType('pool')">Pool</button>
                     </div>
                     <input type="hidden" id="account_type" name="account_type" value="pool">
-                    <p class="help">Use a balanced mix of warmup and pool accounts for authentic interactions.</p>
+                    <p class="note">Use both warmup and pool accounts for best engagement results.</p>
                 </div>
                 </div>
 
                 <div class="section">
-                <div class="title">Volume / Limits</div>
+                <div class="title">Daily Limit</div>
                 <div class="panel">
-                    <label for="daily_limit">Daily email limit</label>
+                    <label for="daily_limit">Emails per day</label>
                     <input type="number" id="daily_limit" name="daily_limit" value="5" min="1" max="100">
-                    <p class="help">Start with 5–10/day. The system will increase safely during warmup.</p>
+                    <p class="note">Start small and let the system scale safely as reputation builds.</p>
                 </div>
                 </div>
 
                 <div class="section">
-                <div class="title">Engagement configuration</div>
+                <div class="title">Engagement Configuration</div>
                 <div class="panel">
-
-                    <div style="margin-bottom:12px">
-                    <label for="open_rate_slider">Email Open Rate <span style="font-weight:700;color:var(--accent);">(<span id="open_rate_display">80%</span>)</span></label>
-                    <div class="slider-row">
-                        <input type="range" id="open_rate_slider" min="50" max="95" value="80" step="5" oninput="updateSliderValue('open_rate_slider','open_rate_display')">
-                    </div>
+                    <label>Email Open Rate (<span id="open_rate_display">80%</span>)</label>
+                    <input type="range" id="open_rate_slider" min="50" max="95" value="80" step="5" oninput="updateSliderValue('open_rate_slider','open_rate_display')">
                     <input type="hidden" id="open_rate_slider_value" name="open_rate" value="80">
-                    </div>
 
-                    <div>
-                    <label for="reply_rate_slider">Reply Rate <span style="font-weight:700;color:var(--accent);">(<span id="reply_rate_display">55%</span>)</span></label>
-                    <div class="slider-row">
-                        <input type="range" id="reply_rate_slider" min="30" max="80" value="55" step="5" oninput="updateSliderValue('reply_rate_slider','reply_rate_display')">
-                    </div>
+                    <label style="margin-top:15px">Reply Rate (<span id="reply_rate_display">55%</span>)</label>
+                    <input type="range" id="reply_rate_slider" min="30" max="80" value="55" step="5" oninput="updateSliderValue('reply_rate_slider','reply_rate_display')">
                     <input type="hidden" id="reply_rate_slider_value" name="reply_rate" value="55">
-                    </div>
 
-                    <p class="help" style="margin-top:12px">Recommended: Open Rate 75–85% · Reply Rate 50–60% for natural engagement.</p>
-
+                    <p class="note">Recommended: Open 75–85%, Reply 50–60% for natural engagement.</p>
                 </div>
                 </div>
 
-                <div class="section cta">
-                <button class="google-btn" type="submit">
-                    <span class="g-icon">📨</span>
-                    Continue with Google
-                </button>
-                <p class="note">Connect seamlessly and let smart automation handle your daily warmups.</p>
-                </div>
-
+                <button class="google-btn" type="submit">Continue with Google</button>
+                <p class="note">Connect once and let automation handle your email warmup journey.</p>
             </form>
             </section>
-
         </div>
         <footer class="small">By continuing you agree to our <a href="#">Terms</a> and <a href="#">Privacy</a>.</footer>
         </div>
@@ -407,21 +366,18 @@ def signin_page():
         var slider = document.getElementById(sliderId);
         var display = document.getElementById(displayId);
         display.textContent = slider.value + '%';
-        if (sliderId === 'open_rate_slider') {
-            document.getElementById('open_rate_slider_value').value = slider.value;
-        } else if (sliderId === 'reply_rate_slider') {
-            document.getElementById('reply_rate_slider_value').value = slider.value;
-        }
+        if (sliderId === 'open_rate_slider') document.getElementById('open_rate_slider_value').value = slider.value;
+        if (sliderId === 'reply_rate_slider') document.getElementById('reply_rate_slider_value').value = slider.value;
         }
 
         function selectAccountType(type) {
-        document.querySelectorAll('.account-type button').forEach(function(b){b.classList.remove('selected')});
+        document.querySelectorAll('.account-type button').forEach(b => b.classList.remove('selected'));
         var el = document.getElementById('type_' + type);
         if (el) el.classList.add('selected');
         document.getElementById('account_type').value = type;
         }
 
-        document.addEventListener('DOMContentLoaded', function(){
+        document.addEventListener('DOMContentLoaded', function() {
         updateSliderValue('open_rate_slider','open_rate_display');
         updateSliderValue('reply_rate_slider','reply_rate_display');
         selectAccountType('pool');
@@ -429,5 +385,6 @@ def signin_page():
     </script>
     </body>
     </html>
+
     """
     return html

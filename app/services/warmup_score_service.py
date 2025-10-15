@@ -7,9 +7,9 @@ Implements the comprehensive warmup score algorithm with the following component
 - Phase Progress Score (20% weight)
 - Spam Penalty Score (10% weight)
 
-Total Warmup Score = (Open Rate Score × 40%) + 
-                     (Reply Rate Score × 30%) + 
-                     (Phase Progress Score × 20%) + 
+Total Warmup Score = (Open Rate Score × 30%) + 
+                     (Reply Rate Score × 20%) + 
+                     (Phase Progress Score × 40%) + 
                      (Spam Penalty × 10%)
 """
 
@@ -271,9 +271,9 @@ class WarmupScoreCalculator:
         
         # Calculate total score with weights
         total_score = (
-            (open_rate_score * 0.40) +
-            (reply_rate_score * 0.30) +
-            (phase_progress_score * 0.20) +
+            (open_rate_score * 0.30) +
+            (reply_rate_score * 0.20) +
+            (phase_progress_score * 0.40) +
             (spam_penalty_score * 0.10)
         )
         
@@ -307,21 +307,21 @@ class WarmupScoreCalculator:
                 'open_rate': {
                     'value': round(open_rate, 1),
                     'score': round(open_rate_score, 1),
-                    'contribution': round(open_rate_score * 0.40, 1),
-                    'weight': 40
+                    'contribution': round(open_rate_score * 0.30, 1),
+                    'weight': 30
                 },
                 'reply_rate': {
                     'value': round(reply_rate, 1),
                     'score': round(reply_rate_score, 1),
-                    'contribution': round(reply_rate_score * 0.30, 1),
-                    'weight': 30
+                    'contribution': round(reply_rate_score * 0.20, 1),
+                    'weight': 20
                 },
                 'phase_progress': {
                     'day': account.warmup_day,
                     'phase': self.get_phase_info(account.warmup_day)[0],
                     'score': round(phase_progress_score, 1),
-                    'contribution': round(phase_progress_score * 0.20, 1),
-                    'weight': 20
+                    'contribution': round(phase_progress_score * 0.40, 1),
+                    'weight': 40
                 },
                 'spam_penalty': {
                     'spam_count': spam_count,
@@ -332,6 +332,7 @@ class WarmupScoreCalculator:
                     'weight': 10
                 }
             },
+
             'statistics': {
                 'total_emails': total_emails,
                 'opened_emails': opened_emails,
@@ -352,7 +353,7 @@ class WarmupScoreCalculator:
             score: Total warmup score
             warmup_day: Current warmup day
             open_rate: Open rate percentage
-            reply_rate: Reply rate percentage
+            reply_rate: Reply rate percentagelready displays engagement rates from account configuration
             spam_count: Number of spam emails
             
         Returns:

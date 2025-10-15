@@ -410,3 +410,47 @@ class GmailService:
             logger.error(f"Error moving message to inbox: {e}")
             return False
     
+    def mark_as_important(self, message_id):
+        """
+        Mark an email as important (add IMPORTANT label)
+        """
+        try:
+            self.service.users().messages().modify(
+                userId='me',
+                id=message_id,
+                body={'addLabelIds': ['IMPORTANT']}
+            ).execute()
+            
+            logger.info(f"Marked message {message_id} as important")
+            return True
+            
+        except HttpError as error:
+            logger.error(f"Gmail API error marking as important: {error}")
+            return False
+        except Exception as e:
+            logger.error(f"Error marking message as important: {e}")
+            return False
+    
+    def is_email_opened(self, message_id):
+        """
+        Check if an email has been opened (is not unread)
+        """
+        try:
+            msg_detail = self.service.users().messages().get(
+                userId='me',
+                id=message_id,
+                format='minimal'
+            ).execute()
+            
+            label_ids = msg_detail.get('labelIds', [])
+            is_opened = 'UNREAD' not in label_ids
+            
+            return is_opened
+            
+        except HttpError as error:
+            logger.error(f"Gmail API error checking if email is opened: {error}")
+            return False
+        except Exception as e:
+            logger.error(f"Error checking if email is opened: {e}")
+            return False
+    

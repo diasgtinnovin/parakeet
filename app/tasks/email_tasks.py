@@ -192,13 +192,7 @@ def simulate_engagement_task():
             total_replied = 0
             
             for pool_account in pool_accounts:
-                # Create engagement service with account-specific rates
-                engagement_service = EngagementSimulationService(
-                    open_rate=pool_account.open_rate,
-                    reply_rate=pool_account.reply_rate
-                )
-                
-                logger.info(f"Processing pool account: {pool_account.email} (open_rate={pool_account.open_rate:.0%}, reply_rate={pool_account.reply_rate:.0%})")
+                logger.info(f"Processing pool account: {pool_account.email}")
                 
                 try:
                     # Authenticate with Gmail
@@ -248,6 +242,13 @@ def simulate_engagement_task():
                                 gmail_service.mark_as_read(message['id'])
                                 continue
                             
+                            # Create engagement service using SENDER'S rates (from warmup account)
+                            # Use sender's open_rate and reply_rate stored in the email record
+                            engagement_service = EngagementSimulationService(
+                                open_rate=email_record.sender_open_rate,
+                                reply_rate=email_record.sender_reply_rate
+                            )
+                            
                             # Check if enough time has passed since email was received
                             if not engagement_service.should_process_email(email_record.sent_at):
                                 logger.debug(f"Email {email_record.id} not ready to process yet")
@@ -256,9 +257,9 @@ def simulate_engagement_task():
                             # Wait realistic delay (simulated - in production this would be handled by scheduling)
                             # For now, we process immediately since the task runs periodically
                             
-                            # Decide whether to open this email
+                            # Decide whether to open this email based on SENDER'S open rate strategy
                             if not engagement_service.should_open():
-                                logger.debug(f"Skipping open for email record {email_record.id} based on probability")
+                                logger.debug(f"Skipping open for email record {email_record.id} based on sender's open rate ({email_record.sender_open_rate:.0%})")
                                 continue
 
                             # Mark email as read via Gmail API (open first, then consider reply)
@@ -270,7 +271,25 @@ def simulate_engagement_task():
                                 total_opened += 1
                                 logger.info(f"✓ Marked email {email_record.id} as opened")
                                 
-                                # Decide whether to reply
+                                # Decide whether to mark as important
+                                if engagement_service.should_mark_important():
+                                    # Calculate delay before marking as important (45-100 seconds)
+                                    important_delay = engagement_service.calculate_important_delay()
+                                    logger.info(f"Will mark email {email_record.id} as important after {important_delay} seconds")
+                                    
+                                    # Wait for the delay
+                                    time.sleep(important_delay)
+                                    
+                                    # Verify email is still opened before marking as important
+                                    if gmail_service.is_email_opened(message['id']):
+                                        if gmail_service.mark_as_important(message['id']):
+                                            logger.info(f"✓ Marked email {email_record.id} as important")
+                                        else:
+                                            logger.warning(f"Failed to mark email {email_record.id} as important")
+                                    else:
+                                        logger.debug(f"Email {email_record.id} is not opened, skipping important marking")
+                                
+                                # Decide whether to reply based on SENDER'S reply rate strategy
                                 if engagement_service.should_reply():
                                     # Wait realistic delay before replying (simulated)
                                     # In production, this could be a separate scheduled task
@@ -293,7 +312,7 @@ def simulate_engagement_task():
                                         email_record.in_reply_to = message['message_id']
                                         db.session.commit()
                                         total_replied += 1
-                                        logger.info(f"✓ Sent reply for email {email_record.id}")
+                                        logger.info(f"✓ Sent reply for email {email_record.id} based on sender's reply rate ({email_record.sender_reply_rate:.0%})")
                             
                         except Exception as e:
                             logger.error(f"Error processing message {message['id']}: {e}")
@@ -450,13 +469,15 @@ def send_scheduled_email(schedule: EmailSchedule) -> bool:
             db.session.commit()
             return False
         
-        # Save email record
+        # Save email record with sender's engagement strategy
         email_record = Email(
             account_id=account.id,
             to_address=recipient_email,
             subject=content_data['subject'],
             content=content_data['content'],
-            tracking_pixel_id=tracking_pixel_id
+            tracking_pixel_id=tracking_pixel_id,
+            sender_open_rate=account.open_rate,  # Store sender's open rate strategy
+            sender_reply_rate=account.reply_rate  # Store sender's reply rate strategy
         )
         db.session.add(email_record)
         db.session.flush()  # Get the email ID
@@ -983,8 +1004,7 @@ celery.conf.beat_schedule = {
     # Calculate warmup scores every 6 hours
     'calculate-warmup-scores': {
         'task': 'app.tasks.email_tasks.calculate_warmup_scores_task',
-        # 'schedule': crontab(minute=0, hour='*/6'), 
-        'schedule': crontab(minute='*/1'),  # Every 3 minutes
+        'schedule': crontab(minute=0, hour='*/6'), 
     },
     
     # Generate status report

@@ -16,6 +16,11 @@ class Email(db.Model):
     opened_at = db.Column(db.DateTime, nullable=True)
     replied_at = db.Column(db.DateTime, nullable=True)
     
+    # Sender's engagement strategy - used by pool accounts to decide open/reply behavior
+    # These rates come from the warmup account (sender) configuration
+    sender_open_rate = db.Column(db.Float, nullable=True)  # Sender's open rate strategy (0-1)
+    sender_reply_rate = db.Column(db.Float, nullable=True)  # Sender's reply rate strategy (0-1)
+    
     # Gmail message IDs for proper threading
     gmail_message_id = db.Column(db.String(255), nullable=True)  # Gmail's message ID
     in_reply_to = db.Column(db.String(255), nullable=True)  # For threading replies
