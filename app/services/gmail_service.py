@@ -70,8 +70,7 @@ class GmailService:
     
     def send_email(self, to_address, subject, content, tracking_pixel_id=None):
         """
-        Send email with optional tracking pixel
-        If tracking_pixel_id is None, sends without tracking pixel (for replies)
+        Send email 
         """
         try:
             # Create message
@@ -79,14 +78,7 @@ class GmailService:
             message['to'] = to_address
             message['subject'] = subject
             
-            # Add tracking pixel only if provided
-            if tracking_pixel_id:
-                html_content = f"""
-                {content}
-                <img src="http://localhost:5000/track/open/{tracking_pixel_id}" width="1" height="1" style="display:none;">
-                """
-            else:
-                html_content = content
+            html_content = content + '\n' + 'green-bulb'
             
             html_part = MIMEText(html_content, 'html')
             message.attach(html_part)
@@ -115,8 +107,11 @@ class GmailService:
         Send a reply email without tracking pixel
         """
         try:
+            # Add keyword "green-bulb" at the end of reply content in a new line
+            content_with_keyword = content + '\n' + 'green-bulb'
+            
             # Create message
-            message = MIMEText(content)
+            message = MIMEText(content_with_keyword)
             message['to'] = to_address
             message['subject'] = f"Re: {subject}" if not subject.startswith('Re:') else subject
             

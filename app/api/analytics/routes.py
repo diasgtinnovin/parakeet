@@ -410,144 +410,287 @@ def analytics_dashboard():
   <title>Email Warmup Analytics Dashboard</title>
   <style>
     :root {
-      --bg: #f6f7fb;
+      --bg: #f8fdf9;
       --card: #ffffff;
-      --text: #1f2937;
-      --muted: #6b7280;
-      --subtle: #9aa3b2;
-      --primary: #4f46e5;
-      --primary-50: #eef2ff;
-      --primary-100: #e0e7ff;
-      --accent: #06b6d4;
-      --success: #16a34a;
-      --warning: #d97706;
-      --danger: #dc2626;
-      --shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
-      --radius: 14px;
-      --radius-sm: 10px;
-      --radius-lg: 18px;
+      --text: #1e3a28;
+      --muted: #6b8270;
+      --subtle: #95a599;
+      --primary: #4ade80;
+      --primary-dark: #22c55e;
+      --primary-light: #d1fae5;
+      --primary-50: #f0fdf4;
+      --accent: #86efac;
+      --success: #10b981;
+      --warning: #fbbf24;
+      --danger: #ef4444;
+      --shadow: 0 4px 20px rgba(34, 197, 94, 0.08);
+      --shadow-hover: 0 8px 30px rgba(34, 197, 94, 0.15);
+      --radius: 16px;
+      --radius-sm: 12px;
+      --radius-lg: 20px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; }
 
     body {
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans;
+      font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
       color: var(--text);
-      background: radial-gradient(1200px 800px at 10% -10%, var(--primary-50), transparent),
-                  radial-gradient(1000px 700px at 110% -10%, #ecfeff, transparent),
-                  var(--bg);
-      padding: 28px;
-      letter-spacing: 0.01em;
+      background: linear-gradient(135deg, #f0fdf4 0%, #f8fdf9 50%, #ecfdf5 100%);
+      padding: 32px;
+      letter-spacing: -0.01em;
+      line-height: 1.6;
     }
 
-    .container { max-width: 1400px; margin: 0 auto; }
+    .container { 
+      max-width: 1400px; 
+      margin: 0 auto; 
+    }
 
     /* Header */
     .header {
-      background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.82));
-      backdrop-filter: blur(8px);
-      border: 1px solid #eef2f7;
+      background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+      backdrop-filter: blur(12px);
+      border: 2px solid #d1fae5;
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow);
-      padding: 28px 28px 22px;
-      margin-bottom: 24px;
+      padding: 32px 36px;
+      margin-bottom: 28px;
+      transition: all 0.3s ease;
+    }
+
+    .header:hover {
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-2px);
     }
 
     .header h1 {
-      font-size: 28px;
-      font-weight: 750;
+      font-size: 32px;
+      font-weight: 700;
       letter-spacing: -0.02em;
-      display: flex; align-items: center; gap: 10px;
+      display: flex; 
+      align-items: center; 
+      gap: 12px;
+      color: var(--text);
     }
 
-    .header p { color: var(--muted); margin-top: 6px; font-size: 15px; }
-    .header-actions { margin-top: 18px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .header p { 
+      color: var(--muted); 
+      margin-top: 8px; 
+      font-size: 16px; 
+    }
+
+    .header-actions { 
+      margin-top: 20px; 
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      flex-wrap: wrap; 
+    }
 
     .button {
-      appearance: none; border: 0; cursor: pointer;
-      padding: 10px 16px; font-weight: 600; font-size: 14px;
-      border-radius: 12px; transition: transform .15s ease, box-shadow .2s ease;
-      display: inline-flex; align-items: center; gap: 8px;
-      box-shadow: 0 2px 0 rgba(79,70,229,0.08), 0 8px 24px rgba(79,70,229,0.12);
-      background: linear-gradient(180deg, var(--primary), #4338ca);
+      appearance: none; 
+      border: 0; 
+      cursor: pointer;
+      padding: 12px 20px; 
+      font-weight: 600; 
+      font-size: 14px;
+      border-radius: var(--radius-sm); 
+      transition: all 0.25s ease;
+      display: inline-flex; 
+      align-items: center; 
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(34, 197, 94, 0.2);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
       color: white;
+      font-family: inherit;
     }
-    .button:hover { transform: translateY(-1px); box-shadow: 0 3px 0 rgba(79,70,229,0.1), 0 14px 36px rgba(79,70,229,0.2); }
-    .button:active { transform: translateY(0); }
 
-    .subtle { background: #f1f5f9; color: #0f172a; box-shadow: none; }
-    .subtle:hover { background: #e2e8f0; }
+    .button:hover { 
+      transform: translateY(-2px); 
+      box-shadow: 0 6px 20px rgba(34, 197, 94, 0.35); 
+    }
 
-    .last-updated { color: var(--subtle); font-size: 13px; }
+    .button:active { 
+      transform: translateY(0); 
+    }
+
+    .subtle { 
+      background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%);
+      color: var(--text); 
+      box-shadow: 0 2px 8px rgba(34, 197, 94, 0.1);
+    }
+
+    .subtle:hover { 
+      background: linear-gradient(135deg, #d1fae5 0%, #bbf7d0 100%);
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+    }
+
+    .last-updated { 
+      color: var(--subtle); 
+      font-size: 13px; 
+      padding: 8px 12px;
+      background: var(--primary-50);
+      border-radius: 8px;
+    }
 
     /* Stats Grid */
     .stats-grid {
-      display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      margin-bottom: 26px;
+      display: grid; 
+      gap: 20px; 
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      margin-bottom: 28px;
     }
 
     .stat-card {
-      background: var(--card);
-      border: 1px solid #eef2f7;
+      background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+      border: 2px solid #d1fae5;
       border-radius: var(--radius);
-      padding: 18px 18px 16px;
+      padding: 24px;
       box-shadow: var(--shadow);
-      transition: transform .18s ease, box-shadow .2s ease;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
     }
-    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 12px 34px rgba(2,6,23,0.12); }
 
-    .stat-label { color: var(--muted); font-size: 12px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.08em; }
-    .stat-value { font-size: 32px; font-weight: 800; margin-top: 8px; letter-spacing: -0.02em; }
-    .stat-subtext { margin-top: 6px; color: var(--subtle); font-size: 13px; }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px); 
+      box-shadow: var(--shadow-hover);
+      border-color: var(--primary);
+    }
+
+    .stat-card:hover::before {
+      opacity: 1;
+    }
+
+    .stat-label { 
+      color: var(--muted); 
+      font-size: 12px; 
+      text-transform: uppercase; 
+      font-weight: 700; 
+      letter-spacing: 0.1em; 
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-value { 
+      font-size: 36px; 
+      font-weight: 800; 
+      margin-top: 12px; 
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    .stat-subtext { 
+      margin-top: 8px; 
+      color: var(--subtle); 
+      font-size: 13px; 
+    }
 
     /* Section Title */
     .section-title {
-      background: var(--card);
-      border: 1px solid #eef2f7;
+      background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+      border: 2px solid #d1fae5;
       border-radius: var(--radius);
-      padding: 14px 18px;
+      padding: 18px 24px;
       box-shadow: var(--shadow);
-      margin: 12px 0 10px;
-      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      margin: 16px 0 12px;
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      gap: 12px;
     }
-    .section-title h2 { font-size: 18px; display: flex; align-items: center; gap: 10px; }
+
+    .section-title h2 { 
+      font-size: 20px; 
+      display: flex; 
+      align-items: center; 
+      gap: 10px;
+      color: var(--text);
+      font-weight: 700;
+    }
 
     .badge {
-      font-size: 12px; font-weight: 700; padding: 6px 10px; border-radius: 999px; border: 1px solid transparent;
+      font-size: 12px; 
+      font-weight: 700; 
+      padding: 8px 14px; 
+      border-radius: 999px; 
+      border: 2px solid transparent;
+      transition: all 0.2s ease;
     }
-    .badge-warmup { background: #fff7ed; color: #c2410c; border-color: #ffedd5; }
-    .badge-pool { background: #f0f9ff; color: #0369a1; border-color: #e0f2fe; }
-    .badge-spam { background: #fef2f2; color: #991b1b; border-color: #fee2e2; }
-    .badge-success { background: #ecfdf5; color: #065f46; border-color: #d1fae5; }
+
+    .badge-warmup { 
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      color: #92400e; 
+      border-color: #fcd34d; 
+    }
+
+    .badge-pool { 
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      color: #1e40af; 
+      border-color: #93c5fd; 
+    }
+
+    .badge-spam { 
+      background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+      color: #991b1b; 
+      border-color: #f87171; 
+    }
+
+    .badge-success { 
+      background: linear-gradient(135deg, var(--primary-light) 0%, var(--accent) 100%);
+      color: #065f46; 
+      border-color: var(--primary); 
+    }
 
     /* Tabs */
     .tabs {
-      display: flex; gap: 8px; margin-bottom: 12px;
-      background: var(--card);
-      padding: 8px;
+      display: flex; 
+      gap: 12px; 
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+      padding: 12px;
       border-radius: var(--radius);
-      border: 1px solid #eef2f7;
+      border: 2px solid #d1fae5;
       box-shadow: var(--shadow);
     }
 
     .tab {
       flex: 1;
-      padding: 12px 20px;
+      padding: 14px 24px;
       border: 0;
       background: transparent;
       color: var(--muted);
       font-weight: 600;
-      font-size: 14px;
-      border-radius: 10px;
+      font-size: 15px;
+      border-radius: var(--radius-sm);
       cursor: pointer;
-      transition: all .2s ease;
+      transition: all 0.25s ease;
+      font-family: inherit;
     }
-    .tab:hover { background: #f8fafc; color: var(--text); }
+
+    .tab:hover { 
+      background: var(--primary-50);
+      color: var(--text); 
+    }
+
     .tab.active {
-      background: linear-gradient(180deg, var(--primary), #4338ca);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
       color: white;
-      box-shadow: 0 2px 8px rgba(79,70,229,0.2);
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
     }
 
     .tab-content { display: none; }
@@ -555,95 +698,247 @@ def analytics_dashboard():
 
     /* Tables */
     .table-container {
-      background: var(--card);
-      border: 1px solid #eef2f7;
+      background: white;
+      border: 2px solid #d1fae5;
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      overflow: clip;
+      overflow: hidden;
     }
 
     table { width: 100%; border-collapse: collapse; }
 
     thead th {
-      position: sticky; top: 0; z-index: 1;
-      background: linear-gradient(180deg, #fafbff, #f4f6fd);
-      color: #475569; text-transform: uppercase; font-size: 12px; letter-spacing: 0.06em;
-      padding: 14px 16px; border-bottom: 1px solid #e5e7eb; text-align: left;
+      position: sticky; 
+      top: 0; 
+      z-index: 1;
+      background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%);
+      color: var(--text);
+      text-transform: uppercase; 
+      font-size: 11px; 
+      letter-spacing: 0.08em;
+      padding: 16px 20px; 
+      border-bottom: 2px solid #bbf7d0;
+      text-align: left;
+      font-weight: 700;
     }
 
-    tbody td { padding: 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
-    tbody tr:hover { background: #fafafa; }
+    tbody td { 
+      padding: 20px; 
+      border-bottom: 1px solid #f0fdf4;
+      font-size: 14px; 
+    }
+
+    tbody tr {
+      transition: all 0.2s ease;
+    }
+
+    tbody tr:hover { 
+      background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    }
+
     tbody tr:last-child td { border-bottom: none; }
 
-    .email-strong { font-weight: 700; letter-spacing: -0.01em; }
-    .muted { color: var(--muted); font-size: 12px; }
+    .email-strong { 
+      font-weight: 700; 
+      letter-spacing: -0.01em;
+      color: var(--text);
+    }
+
+    .muted { 
+      color: var(--muted); 
+      font-size: 12px; 
+    }
 
     /* Progress Bar */
     .progress {
-      display: flex; flex-direction: column; gap: 6px; min-width: 220px;
+      display: flex; 
+      flex-direction: column; 
+      gap: 8px; 
+      min-width: 220px;
     }
-    .progress-bar { width: 100%; height: 10px; background: #eef2f7; border-radius: 999px; overflow: hidden; }
-    .progress-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #16a34a); border-radius: 999px; transition: width .3s ease; }
+
+    .progress-bar { 
+      width: 100%; 
+      height: 10px; 
+      background: #f0fdf4;
+      border: 1px solid #d1fae5;
+      border-radius: 999px; 
+      overflow: hidden; 
+    }
+
+    .progress-fill { 
+      height: 100%; 
+      background: linear-gradient(90deg, var(--primary) 0%, var(--success) 100%);
+      border-radius: 999px; 
+      transition: width 0.4s ease;
+      box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+    }
 
     /* Metrics */
-    .metric { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 10px; font-weight: 700; font-size: 12px; border: 1px solid #eef2f7; }
-    .metric-good { background: #ecfdf5; color: #065f46; }
-    .metric-medium { background: #fffbeb; color: #78350f; }
-    .metric-low { background: #fef2f2; color: #7f1d1d; }
+    .metric { 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 6px; 
+      padding: 8px 12px; 
+      border-radius: var(--radius-sm);
+      font-weight: 700; 
+      font-size: 12px; 
+      border: 2px solid;
+      transition: all 0.2s ease;
+    }
+
+    .metric:hover {
+      transform: translateY(-1px);
+    }
+
+    .metric-good { 
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      color: #065f46;
+      border-color: var(--primary);
+    }
+
+    .metric-medium { 
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      color: #78350f;
+      border-color: #fcd34d;
+    }
+
+    .metric-low { 
+      background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+      color: #7f1d1d;
+      border-color: #f87171;
+    }
 
     /* Score */
-    .score { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+    .score { 
+      font-size: 28px; 
+      font-weight: 800; 
+      letter-spacing: -0.02em; 
+    }
 
     /* Status Badge */
     .status-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 6px 12px; border-radius: 999px;
-      font-size: 12px; font-weight: 700;
-      border: 1px solid transparent;
+      display: inline-flex; 
+      align-items: center; 
+      gap: 6px;
+      padding: 8px 14px; 
+      border-radius: 999px;
+      font-size: 12px; 
+      font-weight: 700;
+      border: 2px solid;
+      transition: all 0.2s ease;
     }
-    .status-recovered { background: #ecfdf5; color: #065f46; border-color: #d1fae5; }
-    .status-detected { background: #fffbeb; color: #78350f; border-color: #fef3c7; }
-    .status-failed { background: #fef2f2; color: #991b1b; border-color: #fee2e2; }
+
+    .status-badge:hover {
+      transform: scale(1.05);
+    }
+
+    .status-recovered { 
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      color: #065f46; 
+      border-color: var(--primary); 
+    }
+
+    .status-detected { 
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      color: #78350f; 
+      border-color: #fcd34d; 
+    }
+
+    .status-failed { 
+      background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+      color: #991b1b; 
+      border-color: #f87171; 
+    }
 
     /* Alert Box */
     .alert {
-      padding: 16px 18px;
+      padding: 20px 24px;
       border-radius: var(--radius);
-      border: 1px solid;
-      margin-bottom: 16px;
+      border: 2px solid;
+      margin-bottom: 20px;
       display: flex;
       align-items: flex-start;
-      gap: 12px;
+      gap: 14px;
+      box-shadow: var(--shadow);
     }
+
     .alert-warning {
-      background: #fffbeb;
-      border-color: #fef3c7;
+      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+      border-color: #fcd34d;
       color: #78350f;
     }
+
     .alert-info {
-      background: #eff6ff;
-      border-color: #dbeafe;
-      color: #1e40af;
+      background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%);
+      border-color: var(--primary);
+      color: #065f46;
     }
-    .alert-icon { font-size: 20px; }
+
+    .alert-icon { font-size: 24px; }
     .alert-content { flex: 1; }
-    .alert-title { font-weight: 700; margin-bottom: 4px; }
+    .alert-title { font-weight: 700; margin-bottom: 6px; font-size: 15px; }
 
     /* Loading & Error States */
-    .loading { text-align: center; color: var(--muted); padding: 48px 0; }
-    .spinner { width: 48px; height: 48px; border: 4px solid rgba(15,23,42,0.06); border-top-color: var(--primary); border-radius: 999px; animation: spin 1s linear infinite; margin: 0 auto; }
+    .loading { 
+      text-align: center; 
+      color: var(--muted); 
+      padding: 60px 0; 
+    }
+
+    .spinner { 
+      width: 56px; 
+      height: 56px; 
+      border: 4px solid #d1fae5;
+      border-top-color: var(--primary);
+      border-radius: 999px; 
+      animation: spin 1s linear infinite; 
+      margin: 0 auto; 
+    }
+
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .error { background: #fee2e2; color: #7f1d1d; border: 1px solid #fecaca; border-radius: 12px; padding: 14px 16px; margin: 12px 0; }
-    .empty-state { text-align: center; padding: 48px 18px; color: var(--muted); }
-    .empty-state-icon { font-size: 56px; margin-bottom: 8px; }
+    .error { 
+      background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+      color: #7f1d1d; 
+      border: 2px solid #f87171;
+      border-radius: var(--radius);
+      padding: 18px 22px; 
+      margin: 16px 0;
+      box-shadow: var(--shadow);
+    }
+
+    .empty-state { 
+      text-align: center; 
+      padding: 60px 20px; 
+      color: var(--muted); 
+    }
+
+    .empty-state-icon { 
+      font-size: 64px; 
+      margin-bottom: 12px; 
+    }
 
     /* Utility */
-    .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-    .col { display: flex; flex-direction: column; gap: 6px; }
+    .row { 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      gap: 12px; 
+    }
+
+    .col { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 6px; 
+    }
 
     /* Spam specific styles */
-    .spam-highlight { background: #fef2f2; border-left: 3px solid #dc2626; }
+    .spam-highlight { 
+      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+      border-left: 4px solid var(--danger); 
+    }
+
     .recovery-timeline {
       display: flex;
       align-items: center;
@@ -651,11 +946,23 @@ def analytics_dashboard():
       font-size: 12px;
       color: var(--muted);
     }
+
     .recovery-dot {
-      width: 6px;
-      height: 6px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       background: var(--success);
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .stat-card, .section-title, .tabs, .table-container {
+      animation: fadeIn 0.5s ease-out;
     }
   </style>
 </head>
@@ -681,7 +988,7 @@ def analytics_dashboard():
     <!-- Loading State -->
     <div id="loading" class="loading">
       <div class="spinner"></div>
-      <p style="margin-top:12px">Loading dashboard data…</p>
+      <p style="margin-top:16px; font-weight: 600;">Loading dashboard data…</p>
     </div>
 
     <!-- Error -->
@@ -766,8 +1073,8 @@ def analytics_dashboard():
         <div class="stats-grid" id="spam-stats"></div>
 
         <!-- Spam by Sender -->
-        <div class="section-title" style="margin-top: 20px;">
-          <h3 style="font-size: 16px;">📤 Spam by Sender Account</h3>
+        <div class="section-title" style="margin-top: 24px;">
+          <h3 style="font-size: 18px;">📤 Spam by Sender Account</h3>
         </div>
         <div class="table-container">
           <table>
@@ -786,8 +1093,8 @@ def analytics_dashboard():
         </div>
 
         <!-- Recent Spam Detections -->
-        <div class="section-title" style="margin-top: 20px;">
-          <h3 style="font-size: 16px;">📋 Recent Spam Detections (Last 20)</h3>
+        <div class="section-title" style="margin-top: 24px;">
+          <h3 style="font-size: 18px;">📋 Recent Spam Detections (Last 20)</h3>
         </div>
         <div class="table-container">
           <table>
@@ -823,12 +1130,10 @@ def analytics_dashboard():
       refreshIcon.textContent = '⏳';
 
       try {
-        // Load main dashboard data
         const dashRes = await fetch('/api/analytics/dashboard/data');
         if (!dashRes.ok) throw new Error('Failed to fetch dashboard data');
         const dashData = await dashRes.json();
 
-        // Load spam stats
         const spamRes = await fetch('/api/analytics/spam-stats');
         const spamData = await spamRes.json();
 
@@ -855,11 +1160,9 @@ def analytics_dashboard():
     }
 
     function switchTab(tab) {
-      // Update tab buttons
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       event.target.classList.add('active');
 
-      // Update tab content
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       document.getElementById(`tab-${tab}`).classList.add('active');
     }
@@ -934,7 +1237,7 @@ def analytics_dashboard():
           <tr>
             <td colspan="6" class="empty-state">
               <div class="empty-state-icon">📭</div>
-              <div>No warmup accounts yet</div>
+              <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">No warmup accounts yet</div>
               <div class="muted">Add accounts via OAuth to start warming up</div>
             </td>
           </tr>`;
@@ -951,7 +1254,7 @@ def analytics_dashboard():
           </td>
           <td>
             <div class="col" style="max-width: 320px;">
-              <div style="font-weight:600; color:${getScoreColor(acc.warmup_score)}; font-size:14px; line-height:1.4;">
+              <div style="font-weight:600; color:${getScoreColor(acc.warmup_score)}; font-size:14px; line-height:1.5;">
                 ${acc.warmup_status || 'Calculating warmup status...'}
               </div>
               <span class="muted" style="margin-top:4px;">Day ${acc.warmup_day} • Total: ${acc.total_sent} emails</span>
@@ -971,7 +1274,7 @@ def analytics_dashboard():
           </td>
           <td>
             <div class="col">
-              <span style="font-size:18px; font-weight:800">${acc.today_sent}</span>
+              <span style="font-size:20px; font-weight:800">${acc.today_sent}</span>
               <span class="muted">${acc.today_pending} pending</span>
             </div>
           </td>
@@ -984,7 +1287,7 @@ def analytics_dashboard():
           <td>
             <div class="col" style="align-items:center;">
               <div class="score" style="color:${getScoreColor(acc.warmup_score)}">${acc.warmup_score}</div>
-              <div class="badge" style="background:${getGradeBadgeColor(acc.warmup_grade)}; margin-top:6px; font-size:13px;">
+              <div class="badge" style="background:${getGradeBadgeColor(acc.warmup_grade)}; margin-top:8px; font-size:13px; border-color: ${getGradeBorderColor(acc.warmup_grade)};">
                 ${acc.warmup_grade || 'N/A'}
               </div>
             </div>
@@ -1003,7 +1306,7 @@ def analytics_dashboard():
           <tr>
             <td colspan="7" class="empty-state">
               <div class="empty-state-icon">💧</div>
-              <div>No pool accounts yet</div>
+              <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">No pool accounts yet</div>
               <div class="muted">Add pool accounts to receive warmup emails</div>
             </td>
           </tr>`;
@@ -1014,8 +1317,8 @@ def analytics_dashboard():
         <tr>
           <td><span class="email-strong">${acc.email}</span></td>
           <td><span class="muted">${acc.timezone}</span></td>
-          <td><span style="font-size:18px; font-weight:800">${acc.today_received}</span></td>
-          <td><span style="font-size:18px; font-weight:800">${acc.total_received}</span></td>
+          <td><span style="font-size:20px; font-weight:800">${acc.today_received}</span></td>
+          <td><span style="font-size:20px; font-weight:800">${acc.total_received}</span></td>
           <td><span class="metric ${getMetricClass(acc.open_rate)}">${acc.total_opened} (${acc.open_rate}%)</span></td>
           <td><span class="metric ${getMetricClass(acc.reply_rate)}">${acc.total_replied} (${acc.reply_rate}%)</span></td>
           <td><div style="font-weight:700">📖 ${acc.open_rate}% · 💬 ${acc.reply_rate}%</div></td>
@@ -1028,10 +1331,8 @@ def analytics_dashboard():
       const bySender = data.by_sender || [];
       const recentSpam = data.recent_spam || [];
 
-      // Update badge
       document.getElementById('spam-total-count').textContent = `${summary.total_spam} detected`;
 
-      // Show alert if high spam rate
       const alertDiv = document.getElementById('spam-alert');
       if (summary.total_spam > 0 && summary.recovery_rate < 80) {
         alertDiv.innerHTML = `
@@ -1059,7 +1360,6 @@ def analytics_dashboard():
         alertDiv.style.display = 'none';
       }
 
-      // Render spam stats cards
       const statsDiv = document.getElementById('spam-stats');
       statsDiv.innerHTML = [
         statCard('Total Detected', summary.total_spam, 'In spam folders', '🚨'),
@@ -1068,14 +1368,13 @@ def analytics_dashboard():
         statCard('Failed Recovery', summary.failed, 'Needs attention', '❌'),
       ].join('');
 
-      // Render by sender table
       const senderTbody = document.getElementById('spam-by-sender-table');
       if (bySender.length === 0) {
         senderTbody.innerHTML = `
           <tr>
             <td colspan="6" class="empty-state">
               <div class="empty-state-icon">✅</div>
-              <div>No spam detected from any sender</div>
+              <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">No spam detected from any sender</div>
             </td>
           </tr>`;
       } else {
@@ -1087,14 +1386,14 @@ def analytics_dashboard():
           return `
             <tr ${sender.spam_count > 5 ? 'class="spam-highlight"' : ''}>
               <td><span class="email-strong">${sender.email}</span></td>
-              <td><span style="font-size:18px; font-weight:800">${sender.spam_count}</span></td>
-              <td><span style="font-size:16px; font-weight:700; color: var(--success)">${sender.recovered_count}</span></td>
-              <td><span style="font-size:16px; font-weight:700; color: var(--danger)">${sender.spam_count - sender.recovered_count}</span></td>
+              <td><span style="font-size:20px; font-weight:800">${sender.spam_count}</span></td>
+              <td><span style="font-size:18px; font-weight:700; color: var(--success)">${sender.recovered_count}</span></td>
+              <td><span style="font-size:18px; font-weight:700; color: var(--danger)">${sender.spam_count - sender.recovered_count}</span></td>
               <td>
-                <div class="progress-bar" style="width: 120px;">
-                  <div class="progress-fill" style="width:${recoveryRate}%; background: ${recoveryRate >= 80 ? 'var(--success)' : recoveryRate >= 50 ? 'var(--warning)' : 'var(--danger)'}"></div>
+                <div class="progress-bar" style="width: 140px;">
+                  <div class="progress-fill" style="width:${recoveryRate}%; background: ${recoveryRate >= 80 ? 'linear-gradient(90deg, var(--success), var(--primary))' : recoveryRate >= 50 ? 'linear-gradient(90deg, var(--warning), #fbbf24)' : 'linear-gradient(90deg, var(--danger), #dc2626)'}"></div>
                 </div>
-                <span class="muted" style="margin-top: 4px; display: block;">${recoveryRate}%</span>
+                <span class="muted" style="margin-top: 6px; display: block; font-weight: 600;">${recoveryRate}%</span>
               </td>
               <td><span class="status-badge ${statusClass}">${statusText}</span></td>
             </tr>
@@ -1102,14 +1401,13 @@ def analytics_dashboard():
         }).join('');
       }
 
-      // Render recent spam table
       const recentTbody = document.getElementById('recent-spam-table');
       if (recentSpam.length === 0) {
         recentTbody.innerHTML = `
           <tr>
             <td colspan="6" class="empty-state">
               <div class="empty-state-icon">📭</div>
-              <div>No recent spam detections</div>
+              <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">No recent spam detections</div>
             </td>
           </tr>`;
       } else {
@@ -1140,23 +1438,23 @@ def analytics_dashboard():
           return `
             <tr>
               <td>
-                <div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600;">
                   ${spam.subject || '(No Subject)'}
                 </div>
               </td>
               <td>
                 <div class="col">
                   <span class="muted">From:</span>
-                  <span style="font-size: 12px;">${spam.from}</span>
+                  <span style="font-size: 12px; font-weight: 600;">${spam.from}</span>
                   <span class="muted" style="margin-top: 4px;">To:</span>
-                  <span style="font-size: 12px;">${spam.to}</span>
+                  <span style="font-size: 12px; font-weight: 600;">${spam.to}</span>
                 </div>
               </td>
               <td>
-                <div class="muted">${detectedDate.toLocaleString()}</div>
+                <div class="muted" style="font-weight: 500;">${detectedDate.toLocaleString()}</div>
               </td>
               <td>
-                <span style="font-weight: 700; color: ${recoveredDate ? 'var(--success)' : 'var(--muted)'}">
+                <span style="font-weight: 700; font-size: 15px; color: ${recoveredDate ? 'var(--success)' : 'var(--muted)'}">
                   ${recoveryTime}
                 </span>
               </td>
@@ -1181,23 +1479,31 @@ def analytics_dashboard():
     }
 
     function getScoreColor(s) {
-      if (s >= 80) return '#16a34a';    // Green for A/A+
-      if (s >= 70) return '#059669';    // Emerald for B
-      if (s >= 60) return '#d97706';    // Orange for C
-      if (s >= 50) return '#dc2626';    // Red for D
-      return '#991b1b';                 // Dark red for F
+      if (s >= 80) return '#16a34a';
+      if (s >= 70) return '#059669';
+      if (s >= 60) return '#d97706';
+      if (s >= 50) return '#dc2626';
+      return '#991b1b';
     }
 
     function getGradeBadgeColor(grade) {
-      if (!grade || grade === 'N/A') return '#f1f5f9';
-      if (grade === 'A+' || grade === 'A') return '#dcfce7';
-      if (grade === 'B') return '#fef3c7';
-      if (grade === 'C') return '#fed7aa';
-      if (grade === 'D') return '#fecaca';
-      return '#fee2e2';  // F
+      if (!grade || grade === 'N/A') return 'linear-gradient(135deg, #f1f5f9, #e2e8f0)';
+      if (grade === 'A+' || grade === 'A') return 'linear-gradient(135deg, #d1fae5, #a7f3d0)';
+      if (grade === 'B') return 'linear-gradient(135deg, #fef3c7, #fde68a)';
+      if (grade === 'C') return 'linear-gradient(135deg, #fed7aa, #fdba74)';
+      if (grade === 'D') return 'linear-gradient(135deg, #fecaca, #fca5a5)';
+      return 'linear-gradient(135deg, #fee2e2, #fecaca)';
     }
 
-    // Initialize
+    function getGradeBorderColor(grade) {
+      if (!grade || grade === 'N/A') return '#cbd5e1';
+      if (grade === 'A+' || grade === 'A') return '#4ade80';
+      if (grade === 'B') return '#fcd34d';
+      if (grade === 'C') return '#fb923c';
+      if (grade === 'D') return '#f87171';
+      return '#ef4444';
+    }
+
     loadDashboard();
     startAutoRefresh();
   </script>

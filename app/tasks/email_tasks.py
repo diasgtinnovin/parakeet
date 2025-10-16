@@ -269,7 +269,7 @@ def simulate_engagement_task():
                                 email_record.gmail_message_id = message['message_id']
                                 db.session.commit()
                                 total_opened += 1
-                                logger.info(f"✓ Marked email {email_record.id} as opened")
+                                logger.info(f"\033[94m✓ Marked email {email_record.id} as opened\033[0m")
                                 
                                 # Decide whether to mark as important
                                 if engagement_service.should_mark_important():
@@ -283,7 +283,7 @@ def simulate_engagement_task():
                                     # Verify email is still opened before marking as important
                                     if gmail_service.is_email_opened(message['id']):
                                         if gmail_service.mark_as_important(message['id']):
-                                            logger.info(f"✓ Marked email {email_record.id} as important")
+                                            logger.info(f"\033[94m✓ Marked email {email_record.id} as important\033[0m")
                                         else:
                                             logger.warning(f"Failed to mark email {email_record.id} as important")
                                     else:
@@ -312,7 +312,7 @@ def simulate_engagement_task():
                                         email_record.in_reply_to = message['message_id']
                                         db.session.commit()
                                         total_replied += 1
-                                        logger.info(f"✓ Sent reply for email {email_record.id} based on sender's reply rate ({email_record.sender_reply_rate:.0%})")
+                                        logger.info(f"\033[93m✓ Sent reply for email {email_record.id} based on sender's reply rate ({email_record.sender_reply_rate:.0%})\033[0m")
                             
                         except Exception as e:
                             logger.error(f"Error processing message {message['id']}: {e}")
@@ -492,9 +492,16 @@ def send_scheduled_email(schedule: EmailSchedule) -> bool:
             Email.sent_at >= db.func.date(db.func.now())
         ).count()
         
-        logger.info(f"✓ Sent scheduled email from {account.email} to {recipient_email} "
-                   f"({today_emails}/{account.calculate_daily_limit()}) - {account.get_warmup_phase()} "
-                   f"[{schedule.activity_period} period]")
+        # Print the sent log in green color for better visibility
+        logger.info(
+            "\033[92m✓ Sent scheduled email from %s to %s (%d/%d) - %s [%s period]\033[0m",
+            account.email,
+            recipient_email,
+            today_emails,
+            account.calculate_daily_limit(),
+            account.get_warmup_phase(),
+            schedule.activity_period
+        )
         
         return True
         

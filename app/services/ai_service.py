@@ -25,30 +25,27 @@ class AIService:
             logger.info("No API key provided")
         elif api_key == "your-openai-api-key":
             logger.info("Placeholder API key detected")
+       # Around lines 28-51, change to:
         else:
             logger.info(f"Attempting to initialize OpenAI client with API key (length: {len(api_key)})")
-            # try:
-            #     self.client = openai.OpenAI(api_key=api_key)
-            #     logger.info("OpenAI client created, testing API key...")
+            try:
+                self.client = openai.OpenAI(api_key=api_key)
+                self.ai_available = True
+                logger.info("OpenAI client initialized successfully!")
                 
-            #     # Test the API key with a simple request
-            #     test_response = self.client.chat.completions.create(
-            #         model="gpt-4o-mini",
-            #         messages=[{"role": "user", "content": "test"}],
-            #         max_tokens=1
-            #     )
-            #     self.ai_available = True
-            #     logger.info("OpenAI API key validated successfully!")
-                
-            # except Exception as e:
-            #     logger.error(f"OpenAI API key validation failed: {e}")
-            #     self.client = None
-            #     self.ai_available = False
-            #     logger.info("Falling back to template-only generation")
+            except Exception as e:
+                logger.error(f"OpenAI client initialization failed: {e}")
+                self.client = None
+                self.ai_available = False
+                logger.info("Falling back to template-only generation")
+        
+        # Load templates and configuration
+        # Remove or comment out the line below:
+        # self.ai_available = True
         
        
         # Load templates and configuration
-        self.ai_available = True
+        # self.ai_available = True
         self.templates = self._load_templates()
         self.placeholders = self._load_placeholders()
         self.ai_prompts = self._load_ai_prompts()
