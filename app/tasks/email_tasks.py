@@ -18,6 +18,38 @@ import time
 logger = logging.getLogger(__name__)
 
 
+def authenticate_and_update_token(gmail_service, account):
+    """
+    Authenticate with Gmail and update token in database if refreshed
+    
+    Args:
+        gmail_service: GmailService instance
+        account: Account model instance
+        
+    Returns:
+        bool: True if authentication successful, False otherwise
+    """
+    oauth_token_data = account.get_oauth_token_data()
+    
+    if not oauth_token_data:
+        logger.warning(f"No OAuth token data for account {account.email}")
+        return False
+    
+    success, updated_token_data = gmail_service.authenticate_with_token(oauth_token_data)
+    
+    if not success:
+        logger.warning(f"Gmail authentication failed for account {account.email}")
+        return False
+    
+    # If token was refreshed, save it to database
+    if updated_token_data:
+        account.set_oauth_token_data(updated_token_data)
+        db.session.commit()
+        logger.info(f"Updated OAuth token for account {account.email}")
+    
+    return True
+
+
 @celery.task
 def generate_daily_schedules_task():
     """
@@ -197,9 +229,8 @@ def simulate_engagement_task():
                 try:
                     # Authenticate with Gmail
                     gmail_service = GmailService()
-                    oauth_token_data = pool_account.get_oauth_token_data()
                     
-                    if not oauth_token_data or not gmail_service.authenticate_with_token(oauth_token_data):
+                    if not authenticate_and_update_token(gmail_service, pool_account):
                         logger.warning(f"Gmail authentication failed for pool account {pool_account.email}")
                         continue
                     
@@ -447,9 +478,8 @@ def send_scheduled_email(schedule: EmailSchedule) -> bool:
         
         # Authenticate and send via Gmail
         gmail_service = GmailService()
-        oauth_token_data = account.get_oauth_token_data()
         
-        if not oauth_token_data or not gmail_service.authenticate_with_token(oauth_token_data):
+        if not authenticate_and_update_token(gmail_service, account):
             logger.error(f"Gmail authentication failed for account {account.email}")
             schedule.mark_failed("Gmail authentication failed")
             db.session.commit()
@@ -532,9 +562,8 @@ def check_replies_task():
 
             for account in warmup_accounts:
                 gmail_service = GmailService()
-                oauth_token_data = account.get_oauth_token_data()
                 
-                if not oauth_token_data or not gmail_service.authenticate_with_token(oauth_token_data):
+                if not authenticate_and_update_token(gmail_service, account):
                     continue
                 
                 # Fetch unread messages from any pool sender to this warmup inbox
@@ -804,9 +833,8 @@ def check_spam_folder_task():
             try:
                 # Authenticate with Gmail
                 gmail_service = GmailService()
-                oauth_token_data = pool_account.get_oauth_token_data()
                 
-                if not oauth_token_data or not gmail_service.authenticate_with_token(oauth_token_data):
+                if not authenticate_and_update_token(gmail_service, pool_account):
                     logger.warning(f"Gmail authentication failed for pool account {pool_account.email}")
                     continue
                 

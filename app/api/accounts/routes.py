@@ -36,7 +36,8 @@ def add_account():
         
         # Test Gmail connection
         gmail_service = GmailService()
-        if not gmail_service.authenticate_with_token(data['oauth_token']):
+        success, _ = gmail_service.authenticate_with_token(data['oauth_token'])
+        if not success:
             return jsonify({'error': 'Invalid OAuth token or connection failed'}), 400
         
         # Create new account

@@ -25,7 +25,15 @@ class GmailService:
         self.service = None
     
     def authenticate_with_token(self, token_data):
-        """Authenticate using provided OAuth token"""
+        """
+        Authenticate using provided OAuth token
+        
+        Returns:
+            tuple: (success: bool, updated_token_data: dict or None)
+            - If authentication succeeds without refresh: (True, None)
+            - If authentication succeeds with refresh: (True, new_token_data)
+            - If authentication fails: (False, None)
+        """
         try:
             # Ensure dict and defensively fill required fields if available via env
             if not isinstance(token_data, dict):
@@ -45,28 +53,45 @@ class GmailService:
             missing_scopes = [s for s in self.SCOPES if s not in provided_scopes]
             if missing_scopes:
                 logger.warning(f"Gmail token missing required scopes: {missing_scopes}. Account needs re-authentication.")
-                return False
+                return (False, None)
 
             creds = Credentials.from_authorized_user_info(td, self.SCOPES)
 
+            # Track if token was refreshed
+            token_refreshed = False
+            
             # Refresh token if needed
             if creds.expired:
                 if creds.refresh_token and creds.client_id and creds.client_secret and creds.token_uri:
                     try:
                         creds.refresh(Request())
                         logger.info("Successfully refreshed expired credentials")
+                        token_refreshed = True
                     except Exception as refresh_error:
                         logger.error(f"Failed to refresh credentials: {refresh_error}")
-                        return False
+                        return (False, None)
                 else:
                     logger.error("Credentials expired and cannot refresh: missing refresh_token/client_id/client_secret/token_uri")
-                    return False
+                    return (False, None)
 
             self.service = build('gmail', 'v1', credentials=creds)
-            return True
+            
+            # If token was refreshed, return the new token data
+            if token_refreshed:
+                updated_token_data = {
+                    "token": creds.token,
+                    "refresh_token": creds.refresh_token,
+                    "token_uri": creds.token_uri,
+                    "client_id": creds.client_id,
+                    "client_secret": creds.client_secret,
+                    "scopes": creds.scopes
+                }
+                return (True, updated_token_data)
+            
+            return (True, None)
         except Exception as e:
             logger.error(f"Gmail authentication failed: {e}")
-            return False
+            return (False, None)
     
     def send_email(self, to_address, subject, content, tracking_pixel_id=None):
         """
