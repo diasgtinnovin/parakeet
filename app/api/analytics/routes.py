@@ -1103,7 +1103,6 @@ def analytics_dashboard():
                 <th>Subject</th>
                 <th>From → To</th>
                 <th>Detected</th>
-                <th>Recovery Time</th>
                 <th>Attempts</th>
                 <th>Status</th>
               </tr>
@@ -1405,7 +1404,7 @@ def analytics_dashboard():
       if (recentSpam.length === 0) {
         recentTbody.innerHTML = `
           <tr>
-            <td colspan="6" class="empty-state">
+            <td colspan="5" class="empty-state">
               <div class="empty-state-icon">📭</div>
               <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">No recent spam detections</div>
             </td>
@@ -1413,20 +1412,6 @@ def analytics_dashboard():
       } else {
         recentTbody.innerHTML = recentSpam.map(spam => {
           const detectedDate = new Date(spam.detected_at);
-          const recoveredDate = spam.recovered_at ? new Date(spam.recovered_at) : null;
-          
-          let recoveryTime = 'N/A';
-          if (recoveredDate) {
-            const diffMs = recoveredDate - detectedDate;
-            const diffMins = Math.floor(diffMs / 60000);
-            if (diffMins < 60) {
-              recoveryTime = `${diffMins}m`;
-            } else {
-              const hours = Math.floor(diffMins / 60);
-              const mins = diffMins % 60;
-              recoveryTime = `${hours}h ${mins}m`;
-            }
-          }
 
           const statusMap = {
             'recovered': { class: 'status-recovered', text: '✅ Recovered' },
@@ -1452,11 +1437,6 @@ def analytics_dashboard():
               </td>
               <td>
                 <div class="muted" style="font-weight: 500;">${detectedDate.toLocaleString()}</div>
-              </td>
-              <td>
-                <span style="font-weight: 700; font-size: 15px; color: ${recoveredDate ? 'var(--success)' : 'var(--muted)'}">
-                  ${recoveryTime}
-                </span>
               </td>
               <td>
                 <span class="metric ${spam.recovery_attempts > 3 ? 'metric-low' : 'metric-medium'}">

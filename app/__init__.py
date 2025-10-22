@@ -34,7 +34,14 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
-    CORS(app)
+    
+    # Configure CORS to allow frontend access
+    frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+    CORS(app, 
+         origins=[frontend_url],
+         supports_credentials=True,
+         allow_headers=['Content-Type', 'Authorization'],
+         methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
     
     # Configure Celery
     celery.conf.update(
