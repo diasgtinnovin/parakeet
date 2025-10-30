@@ -332,7 +332,7 @@ def signin_page():
                 <div class="title">Daily Limit</div>
                 <div class="panel">
                     <label for="daily_limit">Emails per day</label>
-                    <input type="number" id="daily_limit" name="daily_limit" value="5" min="1" max="100">
+                    <input type="number" id="daily_limit" name="daily_limit" value="5" min="1" max="500">
                     <p class="note">Start small and let the system scale safely as reputation builds.</p>
                 </div>
                 </div>

@@ -7,8 +7,8 @@ logger = logging.getLogger(__name__)
 class EngagementSimulationService:
     """
     Service to simulate human-like email engagement behavior
-    - Opens emails after realistic delays with customizable probability
-    - Decides whether to reply with customizable probability
+    - Opens emails after realistic delays with target-based probability
+    - Decides whether to reply with target-based probability
     - Generates replies after realistic delays
     """
     
@@ -66,10 +66,105 @@ class EngagementSimulationService:
         logger.debug(f"Reply decision: {will_reply} (probability: {reply_probability:.2%})")
         return will_reply
 
+    def should_open_target_based(self, sender_account_id: int, db_session) -> bool:
+        """
+        Decide whether to open an email based on TARGET RATE maintenance.
+        This ensures the actual open rate matches the user-specified rate exactly.
+        
+        Args:
+            sender_account_id: The warmup account ID that sent this email
+            db_session: Database session for queries
+            
+        Returns:
+            True if email should be opened, False if it should be skipped
+        """
+        from app.models.email import Email
+        
+        # Get target open rate for this sender
+        target_open_rate = self.custom_open_rate if self.custom_open_rate is not None else 0.80
+        
+        # Count total emails sent by this sender (that have been processed)
+        total_sent = db_session.query(Email).filter(
+            Email.account_id == sender_account_id,
+            Email.is_processed == True
+        ).count()
+        
+        # Count how many were opened
+        total_opened = db_session.query(Email).filter(
+            Email.account_id == sender_account_id,
+            Email.is_processed == True,
+            Email.is_opened == True
+        ).count()
+        
+        # Calculate current open rate
+        if total_sent == 0:
+            # First email - use random decision based on target rate
+            current_open_rate = 0.0
+        else:
+            current_open_rate = total_opened / total_sent
+        
+        logger.debug(
+            f"Open rate check - Target: {target_open_rate:.2%}, "
+            f"Current: {current_open_rate:.2%} ({total_opened}/{total_sent})"
+        )
+        
+        # Decision logic based on current vs target rate
+        if total_sent == 0:
+            # First email - random decision based on target rate
+            should_open = random.random() < target_open_rate
+            logger.info(
+                f"First email for account {sender_account_id} - "
+                f"Random decision: {'OPEN' if should_open else 'SKIP'}"
+            )
+            return should_open
+        
+        # If current rate is significantly below target, ALWAYS open
+        if current_open_rate < (target_open_rate - 0.05):
+            logger.info(
+                f"Current rate ({current_open_rate:.2%}) < Target ({target_open_rate:.2%}) - "
+                f"OPENING to increase rate"
+            )
+            return True
+        
+        # If current rate is significantly above target, NEVER open
+        if current_open_rate > (target_open_rate + 0.05):
+            logger.info(
+                f"Current rate ({current_open_rate:.2%}) > Target ({target_open_rate:.2%}) - "
+                f"SKIPPING to decrease rate"
+            )
+            return False
+        
+        # If rate is close to target (within ±5%), use probability to maintain
+        # Calculate what probability will keep us at target
+        # If we need to move towards target, adjust probability
+        if current_open_rate < target_open_rate:
+            # Slightly below target - increase open probability
+            open_probability = min(1.0, target_open_rate + 0.1)
+        elif current_open_rate > target_open_rate:
+            # Slightly above target - decrease open probability
+            open_probability = max(0.0, target_open_rate - 0.1)
+        else:
+            # At target - use target rate
+            open_probability = target_open_rate
+        
+        should_open = random.random() < open_probability
+        
+        logger.info(
+            f"Rate maintenance mode - Target: {target_open_rate:.2%}, "
+            f"Current: {current_open_rate:.2%}, "
+            f"Probability: {open_probability:.2%}, "
+            f"Decision: {'OPEN' if should_open else 'SKIP'}"
+        )
+        
+        return should_open
+
     def should_open(self) -> bool:
         """
-        Decide whether to open an email.
-        Uses custom rate if provided, otherwise uses default range
+        Decide whether to open an email (OLD PROBABILISTIC METHOD - DEPRECATED).
+        Uses custom rate if provided, otherwise uses default range.
+        
+        WARNING: This method is deprecated. Use should_open_target_based() instead
+        for accurate rate maintenance.
         """
         if self.custom_open_rate is not None:
             # Use custom rate with small random variation (±5%)

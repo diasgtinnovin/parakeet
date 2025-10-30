@@ -205,6 +205,7 @@ def simulate_engagement_task():
     """
     Simulate engagement for pool accounts (open emails and send replies)
     This task runs periodically to process unread emails in pool accounts
+    Uses TARGET-BASED approach to maintain exact user-specified open rates
     """
     from app.services.engagement_simulation_service import EngagementSimulationService
     try:
@@ -221,6 +222,7 @@ def simulate_engagement_task():
                 return "No pool accounts available"
             
             total_opened = 0
+            total_skipped = 0
             total_replied = 0
             
             for pool_account in pool_accounts:
@@ -262,19 +264,25 @@ def simulate_engagement_task():
                             sender_email = message['from'].split('<')[-1].strip('>')
                             email_record = Email.query.filter_by(
                                 to_address=pool_account.email,
-                                is_opened=False
+                                is_opened=False,
+                                is_processed=False  # Only get unprocessed emails
                             ).filter(
                                 Email.subject == message['subject']
                             ).first()
                             
                             if not email_record:
-                                logger.debug(f"No matching email record found for message {message['id']}")
-                                # Still mark as read to avoid processing again
+                                logger.debug(f"No matching unprocessed email record found for message {message['id']}")
+                                # Mark as read in Gmail to avoid reprocessing
                                 gmail_service.mark_as_read(message['id'])
                                 continue
                             
+                            # Get the sender account to access their configuration
+                            sender_account = Account.query.get(email_record.account_id)
+                            if not sender_account:
+                                logger.error(f"Sender account not found for email {email_record.id}")
+                                continue
+                            
                             # Create engagement service using SENDER'S rates (from warmup account)
-                            # Use sender's open_rate and reply_rate stored in the email record
                             engagement_service = EngagementSimulationService(
                                 open_rate=email_record.sender_open_rate,
                                 reply_rate=email_record.sender_reply_rate
@@ -285,22 +293,51 @@ def simulate_engagement_task():
                                 logger.debug(f"Email {email_record.id} not ready to process yet")
                                 continue
                             
-                            # Wait realistic delay (simulated - in production this would be handled by scheduling)
-                            # For now, we process immediately since the task runs periodically
+                            # ============================================================
+                            # TARGET-BASED OPEN DECISION
+                            # This checks current open rate vs target and decides accordingly
+                            # ============================================================
+                            should_open = engagement_service.should_open_target_based(
+                                sender_account_id=sender_account.id,
+                                db_session=db.session
+                            )
                             
-                            # Decide whether to open this email based on SENDER'S open rate strategy
-                            if not engagement_service.should_open():
-                                logger.debug(f"Skipping open for email record {email_record.id} based on sender's open rate ({email_record.sender_open_rate:.0%})")
+                            if not should_open:
+                                # CRITICAL: Mark as processed and read in Gmail so we don't re-evaluate
+                                logger.info(
+                                    f"\033[93m⊗ Skipping email {email_record.id} based on target rate "
+                                    f"(sender: {sender_account.email}, target: {email_record.sender_open_rate:.0%})\033[0m"
+                                )
+                                
+                                # Mark as read in Gmail (so it doesn't appear as unread next time)
+                                gmail_service.mark_as_read(message['id'])
+                                
+                                # Mark as processed in database (but NOT opened)
+                                email_record.is_processed = True
+                                email_record.processed_at = datetime.utcnow()
+                                email_record.is_opened = False  # Explicitly mark as not opened
+                                email_record.gmail_message_id = message['message_id']
+                                db.session.commit()
+                                total_skipped += 1
                                 continue
-
-                            # Mark email as read via Gmail API (open first, then consider reply)
+                            
+                            # ============================================================
+                            # OPEN THE EMAIL
+                            # ============================================================
+                            # Mark email as read via Gmail API
                             if gmail_service.mark_as_read(message['id']):
                                 email_record.is_opened = True
                                 email_record.opened_at = datetime.utcnow()
+                                email_record.is_processed = True
+                                email_record.processed_at = datetime.utcnow()
                                 email_record.gmail_message_id = message['message_id']
                                 db.session.commit()
                                 total_opened += 1
-                                logger.info(f"\033[94m✓ Marked email {email_record.id} as opened\033[0m")
+                                
+                                logger.info(
+                                    f"\033[92m✓ Opened email {email_record.id} "
+                                    f"(sender: {sender_account.email}, target: {email_record.sender_open_rate:.0%})\033[0m"
+                                )
                                 
                                 # Decide whether to mark as important
                                 if engagement_service.should_mark_important():
@@ -343,7 +380,12 @@ def simulate_engagement_task():
                                         email_record.in_reply_to = message['message_id']
                                         db.session.commit()
                                         total_replied += 1
-                                        logger.info(f"\033[93m✓ Sent reply for email {email_record.id} based on sender's reply rate ({email_record.sender_reply_rate:.0%})\033[0m")
+                                        logger.info(
+                                            f"\033[93m✓ Sent reply for email {email_record.id} "
+                                            f"(reply rate: {email_record.sender_reply_rate:.0%})\033[0m"
+                                        )
+                            else:
+                                logger.warning(f"Failed to mark email {email_record.id} as read in Gmail")
                             
                         except Exception as e:
                             logger.error(f"Error processing message {message['id']}: {e}")
@@ -355,7 +397,12 @@ def simulate_engagement_task():
                     db.session.rollback()
                     continue
             
-            result_msg = f"Engagement simulation completed: {total_opened} emails opened, {total_replied} replies sent"
+            result_msg = (
+                f"Engagement simulation completed: "
+                f"{total_opened} emails opened, "
+                f"{total_skipped} emails skipped, "
+                f"{total_replied} replies sent"
+            )
             logger.info(result_msg)
             return result_msg
     except Exception as e:

@@ -16,6 +16,10 @@ class Email(db.Model):
     opened_at = db.Column(db.DateTime, nullable=True)
     replied_at = db.Column(db.DateTime, nullable=True)
     
+    # NEW: Track if email has been processed by engagement simulation
+    is_processed = db.Column(db.Boolean, default=False)  # True once evaluated (opened or skipped)
+    processed_at = db.Column(db.DateTime, nullable=True)  # When it was evaluated
+    
     # Sender's engagement strategy - used by pool accounts to decide open/reply behavior
     # These rates come from the warmup account (sender) configuration
     sender_open_rate = db.Column(db.Float, nullable=True)  # Sender's open rate strategy (0-1)
